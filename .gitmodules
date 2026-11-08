@@ -1,0 +1,6 @@
+[submodule "FlClash"]
+	path = FlClash
+	url = https://github.com/noman17rus/FlClash.git
+[submodule "WDTT-Plus"]
+	path = WDTT-Plus
+	url = https://github.com/noman17rus/WDTT-Plus.git
