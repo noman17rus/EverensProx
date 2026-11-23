@@ -1,0 +1,17 @@
+{
+  "public_url": "https://hub.everens.online",
+  "public_host": "hub.everens.online",
+  "port": 19091,
+  "database": "/var/lib/everensprox-provisioning/accounts.sqlite3",
+  "panel_url": "http://127.0.0.1:2053/REPLACE_PANEL_BASE_PATH",
+  "panel_auth_file": "/etc/everensprox-provisioning/panel-auth.json",
+  "client_api": "universal",
+  "inbound_ids": [],
+  "inbound_hosts": {},
+  "inbound_ports": {},
+  "reality_mlkem_inbound_ids": [],
+  "wdtt_socket": "/run/wdtt/admin.sock",
+  "wdtt_password_file": "/etc/everensprox-provisioning/wdtt-password",
+  "wdtt_host": "hub.everens.online",
+  "wdtt_hashes": "REPLACE_WITH_CURRENT_VK_HASHES"
+}

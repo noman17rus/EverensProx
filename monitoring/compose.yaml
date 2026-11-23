@@ -1,0 +1,92 @@
+name: everensprox-monitoring
+
+services:
+  collector:
+    build: ./collector
+    network_mode: host
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      XUI_BASE_URL: ${XUI_BASE_URL:?Set panel URL including web base path in .env}
+    volumes:
+      - collector-data:/data
+      - type: bind
+        source: /run/wdtt-metrics
+        target: /run/wdtt-metrics
+        read_only: true
+        bind:
+          create_host_path: false
+    secrets: [xui_auth]
+    logging: &logging
+      driver: json-file
+      options: {max-size: 10m, max-file: '3'}
+
+  node-exporter:
+    image: prom/node-exporter:v1.12.1
+    network_mode: host
+    pid: host
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    command:
+      - --path.rootfs=/host
+      - --web.listen-address=127.0.0.1:9100
+    volumes:
+      - /:/host:ro,rslave
+    logging: *logging
+
+  prometheus:
+    image: prom/prometheus:v3.5.5
+    network_mode: host
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+      - --storage.tsdb.retention.size=5GB
+      - --web.listen-address=127.0.0.1:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    logging: *logging
+
+  grafana:
+    image: grafana/grafana:12.3.11
+    network_mode: host
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      GF_SERVER_HTTP_ADDR: ${GRAFANA_BIND_ADDRESS:-127.0.0.1}
+      GF_SERVER_HTTP_PORT: '3000'
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_password
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_AUTH_ANONYMOUS_ENABLED: 'false'
+      GF_ANALYTICS_REPORTING_ENABLED: 'false'
+      GF_ANALYTICS_CHECK_FOR_UPDATES: 'false'
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+    tmpfs: [/tmp]
+    secrets: [grafana_password]
+    logging: *logging
+
+volumes:
+  collector-data:
+  prometheus-data:
+  grafana-data:
+
+secrets:
+  xui_auth:
+    file: ./secrets/xui_auth.json
+  grafana_password:
+    file: ./secrets/grafana_password

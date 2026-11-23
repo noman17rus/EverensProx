@@ -1,0 +1,22 @@
+[Unit]
+Description=EverensProx LAN subscription manager
+After=network-online.target x-ui.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/everensprox-subscription/server.py
+Restart=on-failure
+RestartSec=5
+UMask=0077
+StateDirectory=everensprox-subscription
+StateDirectoryMode=0700
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/everensprox-subscription
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+
+[Install]
+WantedBy=multi-user.target

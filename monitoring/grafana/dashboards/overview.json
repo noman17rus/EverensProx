@@ -1,0 +1,752 @@
+{
+  "uid": "everensprox-vpn",
+  "title": "Домашний сервер · WDTT и VLESS",
+  "tags": [
+    "EverensProx",
+    "VPN"
+  ],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "timezone": "browser",
+  "refresh": "15s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Доступность источников · 1 = работает",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "everensprox-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(vpn_source_up or on(protocol) label_replace(up{job=\"vpn\"} * 0,\"protocol\",\"wdtt\",\"job\",\".*\") or on(protocol) label_replace(up{job=\"vpn\"} * 0,\"protocol\",\"vless\",\"job\",\".*\")) or on(protocol) label_replace(up{job=\"node\"},\"protocol\",\"host\",\"job\",\".*\")",
+          "legendFormat": "{{protocol}}",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Доступность определения онлайн",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "everensprox-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "vpn_source_online_up or on(protocol) label_replace(up{job=\"vpn\"} * 0,\"protocol\",\"wdtt\",\"job\",\".*\") or on(protocol) label_replace(up{job=\"vpn\"} * 0,\"protocol\",\"vless\",\"job\",\".*\")",
+          "legendFormat": "{{protocol}}",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "CPU · %",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "everensprox-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[$__rate_interval])))",
+          "legendFormat": "CPU",
+          "range": true
+        }
+      ],
+      "options": {}
+    },
+    {
+      "id": 4,
+      "title": "Занято RAM · %",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 8,
+        "y": 4,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "everensprox-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
+          "legendFormat": "RAM",
+          "range": true
+        }
+      ],
+      "options": {}
+    },
+    {
+      "id": 5,
+      "title": "Свободное место · по разделам",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 16,
+        "y": 4,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "everensprox-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "node_filesystem_avail_bytes{fstype!~\"tmpfs|overlay|squashfs|nsfs\"}",
+          "legendFormat": "{{protocol}} {{client_name}} {{device}}",
+          "range": true
+        }
+      ],
+      "options": {}
+    },
+    {
+      "id": 6,
+      "title": "Сетевая карта · приём, включая накладные расходы",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 11,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "everensprox-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "8 * rate(node_network_receive_bytes_total{device!~\"lo|veth.*|br-.*|docker.*|lxcbr.*|wdtt.*|tun.*|wg.*\"}[$__rate_interval])",
+          "legendFormat": "{{protocol}} {{client_name}} {{device}}",
+          "range": true
+        }
+      ],
+      "options": {}
+    },
+    {
+      "id": 7,
+      "title": "Сетевая карта · передача, включая накладные расходы",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 11,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "everensprox-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "8 * rate(node_network_transmit_bytes_total{device!~\"lo|veth.*|br-.*|docker.*|lxcbr.*|wdtt.*|tun.*|wg.*\"}[$__rate_interval])",
+          "legendFormat": "{{protocol}} {{client_name}} {{device}}",
+          "range": true
+        }
+      ],
+      "options": {}
+    },
+    {
+      "id": 8,
+      "title": "Трафик клиентов · скорость по протоколам",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "everensprox-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(protocol,direction) (8 * rate(vpn_client_traffic_bytes_total[$__rate_interval])) and on(protocol) (vpn_source_up == 1)",
+          "legendFormat": "{{protocol}} {{direction}}",
+          "range": true
+        }
+      ],
+      "options": {}
+    },
+    {
+      "id": 9,
+      "title": "Клиенты онлайн · при доступном источнике",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "everensprox-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(protocol) (vpn_client_online) and on(protocol) (vpn_source_online_up == 1)",
+          "legendFormat": "{{protocol}} {{client_name}} {{device}}",
+          "range": true
+        }
+      ],
+      "options": {}
+    },
+    {
+      "id": 10,
+      "title": "WDTT · клиенты (down = к клиенту, up = от клиента)",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 25,
+        "w": 24,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "everensprox-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "—"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Скачано · всего"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Передано · всего"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Скорость ↓"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bps"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Скорость ↑"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bps"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Онлайн"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Офлайн",
+                        "color": "gray"
+                      },
+                      "1": {
+                        "text": "Онлайн",
+                        "color": "green"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "label_join(label_replace((label_replace((vpn_client_online{protocol=\"wdtt\"} and on(protocol) (vpn_source_online_up == 1)),\"column\",\"Онлайн\",\"protocol\",\".*\") or label_replace((vpn_client_traffic_bytes_total{protocol=\"wdtt\",direction=\"down\"} and on(protocol) (vpn_source_up == 1)),\"column\",\"Скачано · всего\",\"protocol\",\".*\") or label_replace((vpn_client_traffic_bytes_total{protocol=\"wdtt\",direction=\"up\"} and on(protocol) (vpn_source_up == 1)),\"column\",\"Передано · всего\",\"protocol\",\".*\") or label_replace((8 * rate(vpn_client_traffic_bytes_total{protocol=\"wdtt\",direction=\"down\"}[$__rate_interval]) and on(protocol) (vpn_source_up == 1)),\"column\",\"Скорость ↓\",\"protocol\",\".*\") or label_replace((8 * rate(vpn_client_traffic_bytes_total{protocol=\"wdtt\",direction=\"up\"}[$__rate_interval]) and on(protocol) (vpn_source_up == 1)),\"column\",\"Скорость ↑\",\"protocol\",\".*\") or label_replace((vpn_client_present{protocol=\"wdtt\"} and on(protocol) (vpn_source_up == 1)),\"column\",\"Запись\",\"protocol\",\".*\") or label_replace((vpn_client_workers{protocol=\"wdtt\"} and on(protocol) (vpn_source_up == 1)),\"column\",\"Соединения\",\"protocol\",\".*\")),\"client_short\",\"$1\",\"client_id\",\"(.{8}).*\"),\"client\",\" · \",\"client_name\",\"client_short\")",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "transformations": [
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "column",
+            "rowField": "client",
+            "valueField": "Value",
+            "emptyValue": "null"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Запись": true
+            },
+            "renameByName": {
+              "client\\column": "Клиент"
+            },
+            "indexByName": {
+              "client\\column": 0,
+              "Онлайн": 1,
+              "Скачано · всего": 2,
+              "Передано · всего": 3,
+              "Скорость ↓": 4,
+              "Скорость ↑": 5,
+              "Соединения": 6,
+              "Запись": 7
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "WDTT · расход за выбранный период (оценка)",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 34,
+        "w": 12,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "everensprox-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(protocol,direction) (increase(vpn_client_traffic_bytes_total{protocol=\"wdtt\"}[$__range])) and on(protocol) (vpn_source_up == 1)",
+          "legendFormat": "{{direction}}",
+          "range": true
+        }
+      ],
+      "options": {}
+    },
+    {
+      "id": 12,
+      "title": "WDTT · скорость по клиентам",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 34,
+        "w": 12,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "everensprox-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(client_id,client_name,protocol) (8 * rate(vpn_client_traffic_bytes_total{protocol=\"wdtt\"}[$__rate_interval])) and on(protocol) (vpn_source_up == 1)",
+          "legendFormat": "{{protocol}} {{client_name}} {{device}}",
+          "range": true
+        }
+      ],
+      "options": {}
+    },
+    {
+      "id": 13,
+      "title": "VLESS · клиенты (down = к клиенту, up = от клиента)",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 39,
+        "w": 24,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "everensprox-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "—"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Скачано · всего"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Передано · всего"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Скорость ↓"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bps"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Скорость ↑"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bps"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Онлайн"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Офлайн",
+                        "color": "gray"
+                      },
+                      "1": {
+                        "text": "Онлайн",
+                        "color": "green"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "label_join(label_replace((label_replace((vpn_client_online{protocol=\"vless\"} and on(protocol) (vpn_source_online_up == 1)),\"column\",\"Онлайн\",\"protocol\",\".*\") or label_replace((vpn_client_traffic_bytes_total{protocol=\"vless\",direction=\"down\"} and on(protocol) (vpn_source_up == 1)),\"column\",\"Скачано · всего\",\"protocol\",\".*\") or label_replace((vpn_client_traffic_bytes_total{protocol=\"vless\",direction=\"up\"} and on(protocol) (vpn_source_up == 1)),\"column\",\"Передано · всего\",\"protocol\",\".*\") or label_replace((8 * rate(vpn_client_traffic_bytes_total{protocol=\"vless\",direction=\"down\"}[$__rate_interval]) and on(protocol) (vpn_source_up == 1)),\"column\",\"Скорость ↓\",\"protocol\",\".*\") or label_replace((8 * rate(vpn_client_traffic_bytes_total{protocol=\"vless\",direction=\"up\"}[$__rate_interval]) and on(protocol) (vpn_source_up == 1)),\"column\",\"Скорость ↑\",\"protocol\",\".*\") or label_replace((vpn_client_present{protocol=\"vless\"} and on(protocol) (vpn_source_up == 1)),\"column\",\"Запись\",\"protocol\",\".*\")),\"client_short\",\"$1\",\"client_id\",\"(.{8}).*\"),\"client\",\" · \",\"client_name\",\"client_short\")",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "transformations": [
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "column",
+            "rowField": "client",
+            "valueField": "Value",
+            "emptyValue": "null"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Запись": true
+            },
+            "renameByName": {
+              "client\\column": "Клиент"
+            },
+            "indexByName": {
+              "client\\column": 0,
+              "Онлайн": 1,
+              "Скачано · всего": 2,
+              "Передано · всего": 3,
+              "Скорость ↓": 4,
+              "Скорость ↑": 5,
+              "Соединения": 6,
+              "Запись": 7
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "VLESS · расход за выбранный период (оценка)",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 48,
+        "w": 12,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "everensprox-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(protocol,direction) (increase(vpn_client_traffic_bytes_total{protocol=\"vless\"}[$__range])) and on(protocol) (vpn_source_up == 1)",
+          "legendFormat": "{{direction}}",
+          "range": true
+        }
+      ],
+      "options": {}
+    },
+    {
+      "id": 15,
+      "title": "VLESS · скорость по клиентам",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 48,
+        "w": 12,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "everensprox-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(client_id,client_name,protocol) (8 * rate(vpn_client_traffic_bytes_total{protocol=\"vless\"}[$__rate_interval])) and on(protocol) (vpn_source_up == 1)",
+          "legendFormat": "{{protocol}} {{client_name}} {{device}}",
+          "range": true
+        }
+      ],
+      "options": {}
+    }
+  ],
+  "description": "WDTT online = авторизованные рабочие соединения; VLESS online = данные панели. Счётчики трафика и трафик сетевых карт учитываются отдельно. История начинается после запуска мониторинга; increase — оценка по сохранённым отсчётам."
+}

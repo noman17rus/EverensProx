@@ -1,1 +1,8 @@
 .build/
+__pycache__/
+*.pyc
+.env
+secrets/
+*.jks
+*.keystore
+*.sqlite3

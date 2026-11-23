@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Управление сервером · EverensProx</title>
+<style>
+:root{color-scheme:dark;font:16px/1.55 system-ui,sans-serif;background:#101722;color:#edf2fa}*{box-sizing:border-box}body{margin:0}main{max-width:800px;margin:0 auto;padding:40px 22px 64px}header{border-bottom:1px solid #33435b;padding-bottom:24px;margin-bottom:28px}.brand{font-size:.9rem;letter-spacing:.12em;color:#9bb8e0}h1{font-size:clamp(1.8rem,5vw,2.5rem);line-height:1.2;margin:12px 0}h2{font-size:1.2rem;margin:0 0 12px}p{margin:8px 0;color:#b7c7db}.card{background:#172333;border:1px solid #33435b;border-radius:16px;padding:24px;margin:18px 0}label{display:block;font-weight:600;margin-bottom:8px}input,select{width:100%;font:inherit;color:inherit;background:#0e1724;border:1px solid #60738c;border-radius:8px;padding:12px}input:focus,select:focus,button:focus-visible{outline:3px solid #87b7ff;outline-offset:2px}button{font:inherit;font-weight:600;background:#9bc6ff;color:#101722;border:1px solid transparent;border-radius:8px;padding:11px 18px;cursor:pointer;min-height:48px}button.secondary{background:#26384f;border-color:#60738c;color:#edf2fa}button:disabled{opacity:.45;cursor:default}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}.hint{font-size:.9rem}.metrics{display:flex;gap:36px;flex-wrap:wrap;margin:16px 0}.metric strong{display:block;font-size:1.7rem}.metric span{color:#b7c7db;font-size:.9rem}#message{border-left:3px solid #9bc6ff;padding:10px 14px;background:#1d3049;margin:16px 0;color:#edf2fa;overflow-wrap:anywhere}#error{color:#ffb9ae}#candidate{color:#b6e7c3;margin-top:16px}[hidden]{display:none!important}.topline{display:flex;justify-content:space-between;align-items:center;gap:16px}.small{font-size:.9rem;padding:5px 12px;min-height:36px}@media(max-width:480px){main{padding-top:24px}.card{padding:18px}.actions button{width:100%}}
+.connection-list{display:grid;gap:12px;margin-top:20px}.connection-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:16px;background:#0e1724;border:1px solid #33435b;border-radius:10px}.connection-row.current{border-color:#9bc6ff}.connection-name{font-weight:600;overflow-wrap:anywhere}.connection-detail{font-size:.9rem;color:#b7c7db}.connection-tools{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.badge{display:inline-block;color:#b6e7c3;font-size:.85rem;margin-right:10px}.latency{font-variant-numeric:tabular-nums}.connection-row button{font-size:.9rem;min-height:44px;padding:8px 12px}@media(max-width:600px){.connection-row{grid-template-columns:1fr}.connection-tools{justify-content:flex-start}}
+textarea{width:100%;font:inherit;color:inherit;background:#0e1724;border:1px solid #60738c;border-radius:8px;padding:12px;resize:vertical}#wdttEditor{margin-top:24px;border-top:1px solid #33435b;padding-top:16px}#wdttEditor label,#wdttSection>label{margin-top:16px}#wdttEditor form+form{margin-top:24px}#wdttError{color:#ffb9ae}#wdttMessage{color:#b6e7c3}.device-info{white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;background:#0e1724;border-radius:8px}#wdttTraffic p{font-variant-numeric:tabular-nums}
+</style>
+<main>
+<header><div class="brand">EVERENSPROX / ДОМАШНИЙ СЕРВЕР</div><h1>Управление сервером</h1><p>Пользователи WDTT и общий внешний выход для VLESS и WDTT.</p></header>
+<section id="login" class="card"><h2>Вход в управление</h2><p>Страница работает из домашней сети, даже если внешний выход недоступен.</p><form id="loginForm"><label for="password">Пароль панели</label><input id="password" type="password" autocomplete="current-password" required><div class="actions"><button>Войти</button></div></form></section>
+<div id="panel" hidden>
+<section class="card" id="wdttSection">
+<div class="topline"><h2>Пользователи WDTT</h2><button id="wdttRefresh" class="secondary small">Обновить</button></div>
+<p>Все доступы из бота WDTT. Изменения действуют сразу и видны в боте.</p>
+<p id="wdttSummary" role="status"></p><p id="wdttMessage" role="status" aria-live="polite"></p><p id="wdttError" role="alert"></p>
+<div class="actions"><button id="wdttNew">Создать пользователя</button></div>
+<label for="wdttSearch">Поиск по имени или устройству</label><input id="wdttSearch" type="search" placeholder="Найти пользователя">
+<label for="wdttFilter">Статус доступа</label><select id="wdttFilter"><option value="">Все пользователи</option><option value="active">Активные</option><option value="deactivated">Отключённые</option><option value="expired">Истёкшие</option></select>
+<div id="wdttUsers" class="connection-list"></div>
+<div id="wdttEditor" hidden>
+<h3 id="wdttEditorTitle">Пользователь WDTT</h3><p id="wdttUserStatus"></p>
+<form id="wdttForm">
+<label for="wdttLabel">Имя пользователя</label><input id="wdttLabel" maxlength="200">
+<label for="wdttHash">VK-хеш или ссылка</label><input id="wdttHash" maxlength="4096" autocomplete="off">
+<label for="wdttPorts">Порты ссылки: DTLS, WG, локальный</label><input id="wdttPorts" maxlength="100" placeholder="56000,56001,1080" required>
+<label for="wdttShared">Тип доступа</label><select id="wdttShared"><option value="false">Личный — привязка к одному устройству</option><option value="true">Общий — без ограничения устройств</option></select>
+<div id="wdttCreateFields"><label for="wdttCreatePassword">Пароль (пусто — создать автоматически)</label><input id="wdttCreatePassword" type="password" autocomplete="new-password" minlength="16" maxlength="16" pattern="[ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789]{16}"><label for="wdttCreateDays">Срок в днях: 0 — бессрочно</label><input id="wdttCreateDays" type="number" min="0" max="365" value="30" required></div>
+<div class="actions"><button id="wdttSave">Сохранить</button><button id="wdttClose" type="button" class="secondary">Закрыть</button></div>
+</form>
+<div id="wdttExisting" hidden>
+<div class="actions"><button id="wdttToggle" class="secondary">Отключить доступ</button><button id="wdttUnbind" class="secondary">Сбросить привязку устройств</button><button id="wdttDelete" class="secondary">Удалить пользователя</button></div>
+<form id="wdttExpiryForm"><label for="wdttDays">Новый срок от текущего момента, дней (0 — бессрочно)</label><input id="wdttDays" type="number" min="0" max="365" value="30" required><div class="actions"><button class="secondary">Изменить срок</button></div></form>
+<form id="wdttPasswordForm"><label for="wdttNewPassword">Новый пароль — 16 символов</label><input id="wdttNewPassword" type="password" minlength="16" maxlength="16" pattern="[ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789]{16}" autocomplete="new-password" required><p class="hint">Латинские буквы и цифры, кроме I, O, i, l, o, 0 и 1. После смены пароля потребуется обновить ссылку на устройствах.</p><div class="actions"><button class="secondary">Сменить пароль</button></div></form>
+<label for="wdttSecret">Текущий пароль</label><input id="wdttSecret" readonly type="password" autocomplete="off"><div class="actions"><button id="wdttReveal" class="secondary small">Показать пароль</button></div>
+<label for="wdttLink">Ссылка подключения WDTT</label><textarea id="wdttLink" readonly rows="4"></textarea><div class="actions"><button id="wdttCopy" class="secondary">Копировать ссылку</button></div><p id="wdttLinkHint" class="hint"></p>
+<h3>Трафик</h3><div id="wdttTraffic"></div><h3>Устройства</h3><div id="wdttDevices"></div><h3>История привязок</h3><div id="wdttHistory"></div>
+</div></div></section>
+<section class="card"><div class="topline"><h2>Сохранённая подписка</h2><button id="logout" class="secondary small">Выйти</button></div><div class="metrics"><div class="metric"><strong id="nodes">—</strong><span>узлов</span></div><div class="metric"><strong id="working">—</strong><span>работало при проверке</span></div></div><p id="updated" class="hint"></p><p class="hint">Число выше — результат проверки при сохранении. Текущее состояние источников показано ниже.</p><div id="message" role="status" aria-live="polite"></div></section>
+<section class="card"><h2>Бесплатный резерв</h2><p id="activeSource" role="status"></p><p id="fallbackState"></p><div class="actions"><button id="toggleFallback" class="secondary">Включить автоматический резерв</button><button id="refreshFree" class="secondary">Обновить все бесплатные</button></div><p class="hint">Основная подписка всегда имеет приоритет. Резерв включается после двух проверок без работающих основных узлов. После восстановления основной подписки выход возвращается на неё, в том числе после ручного выбора бесплатного сервера. Включённые бесплатные подписки обновляются каждые 12 часов.</p><p id="primaryStatus" class="hint"></p><div id="freeSources"></div><form id="sourceForm"><h3 id="sourceFormTitle">Добавить бесплатную подписку</h3><label for="sourceName">Название</label><input id="sourceName" maxlength="100" required><label for="sourceUrl">HTTPS-ссылка</label><input id="sourceUrl" type="password" autocomplete="off" placeholder="https://…" maxlength="8192"><p class="hint">При редактировании оставьте ссылку пустой, чтобы сохранить прежнюю.</p><div class="actions"><button id="saveSource">Сохранить источник</button><button id="cancelSource" type="button" class="secondary" hidden>Отмена</button></div></form></section>
+<section class="card"><h2>Выбрать подключение</h2><p id="connectionMode" role="status">Получаем состояние Xray…</p><p id="connectionError" class="hint"></p><div class="actions"><button id="auto" class="secondary connection-action">Автоматически</button><button id="pingAll" class="secondary connection-action">Проверить все</button></div><p class="hint">Задержка — время ответа HTTPS через узел с домашнего сервера, не ICMP-пинг. Проверка не переключает подключение. Ручной выбор действует для общего внешнего выхода VLESS и WDTT.</p><p id="manualHint" class="hint" hidden>Выбранный узел используется, пока доступен. При отказе сначала проверяются основные серверы, затем резерв. Бесплатный выход всегда уступает восстановленной основной подписке. Чтобы снять ручной выбор, нажмите «Автоматически».</p><label for="sourceFilter">Источник серверов</label><select id="sourceFilter"><option value="">Все источники</option></select><div id="connections" class="connection-list"></div></section>
+<section class="card"><h2>Заменить подписку</h2><p>Вставьте HTTPS-ссылку от нового провайдера. Проверка не меняет рабочие подключения.</p><form id="checkForm"><label for="url">Ссылка на подписку</label><input id="url" type="password" placeholder="https://…" autocomplete="off" spellcheck="false" required><p class="hint">VLESS-список, Base64, JSON Xray или Happ. Ссылка хранится только на сервере.</p><div id="profileBox" hidden><label for="profile">Профиль</label><select id="profile"></select></div><div id="candidate" role="status"></div><div class="actions"><button id="check">Проверить</button><button id="apply" type="button" hidden>Применить</button></div></form><p class="hint">Проверка нескольких узлов может занять несколько минут. При применении соединения могут кратко прерваться.</p></section>
+<section class="card"><h2>Восстановление</h2><p>Вернуть подписку, которая была сохранена перед последней заменой. Сначала проверим её доступность.</p><div class="actions"><button id="rollback" class="secondary" disabled>Вернуть предыдущую</button></div></section>
+</div><p id="error" role="alert"></p>
+</main>
+<script>
+'use strict';
+const el=id=>document.getElementById(id);let csrf='',candidate=null,timer=null,busy=false,dirty=false,connectionSignature='',fallbackEnabled=false;
+let catalog={},editingSource=null,sourceSignature='';
+const sourceName=s=>s==='primary'?'Основная подписка':(catalog[s]?.name||'Бесплатный резерв');
+const sourceStatus=v=>v.nodes+' узлов'+(v.loading?' · идёт загрузка и проверка…':'')+(v.updated?' · обновлена '+new Date(v.updated*1000).toLocaleString('ru-RU'):' · ещё не загружена')+(v.checked?' · проверено '+new Date(v.checked*1000).toLocaleTimeString('ru-RU')+', работают: '+v.working:'')+(v.skipped?' · пропущено: '+v.skipped:'')+(v.error?' · '+v.error:'');
+function renderSources(s){
+ catalog=s.catalog||{};fallbackEnabled=s.fallback_enabled;
+ el('activeSource').textContent='Текущий выход: '+sourceName(s.active.source);
+ el('fallbackState').textContent=fallbackEnabled?'Автоматический резерв включён':'Автоматический резерв выключен';
+ el('toggleFallback').textContent=fallbackEnabled?'Выключить автоматический резерв':'Включить автоматический резерв';
+ for(const id of ['toggleFallback','refreshFree','saveSource'])el(id).disabled=busy;
+ el('primaryStatus').textContent='Основная подписка: '+sourceStatus(s.sources.primary);
+ const signature=JSON.stringify([catalog,s.sources,s.active.source]);
+ if(signature!==sourceSignature){sourceSignature=signature;el('freeSources').replaceChildren(...Object.entries(catalog).map(([id,feed])=>{
+  const row=document.createElement('div');row.className='card';
+  const title=document.createElement('h3');title.textContent=feed.name+(feed.enabled?'':' · выключена');
+  const detail=document.createElement('p');detail.className='hint';detail.textContent=sourceStatus(s.sources[id]||{nodes:0})+(feed.next_refresh?' · следующее обновление: '+new Date(feed.next_refresh*1000).toLocaleString('ru-RU'):'');
+  const actions=document.createElement('div');actions.className='actions';
+  for(const [act,label] of [['refresh-free','Обновить'],['ping','Проверить серверы'],['filter','Показать серверы'],['edit','Изменить'],['toggle',feed.enabled?'Отключить':'Включить'],['delete-source','Удалить']]){
+   const b=document.createElement('button');b.type='button';b.className='secondary source-action';b.textContent=label;b.dataset.source=id;b.dataset.action=act;
+   if((act==='toggle'&&feed.enabled||act==='delete-source')&&id===s.active.source)b.dataset.active='true';
+   actions.append(b);
+  }row.append(title,detail,actions);return row;
+ }));}
+ for(const b of el('freeSources').querySelectorAll('button'))b.disabled=busy||b.dataset.active==='true';
+ const filter=el('sourceFilter');const previous=filter.value;
+ if(filter.dataset.catalog!==JSON.stringify(catalog)){
+  filter.dataset.catalog=JSON.stringify(catalog);filter.replaceChildren(...[['','Все источники'],['primary','Основная подписка'],...Object.entries(catalog).map(([id,f])=>[id,f.name])].map(([value,label])=>{const o=document.createElement('option');o.value=value;o.textContent=label;return o;}));filter.value=previous;
+ }
+}
+async function api(path,data){const r=await fetch('/api/'+path,{method:data===undefined?'GET':'POST',credentials:'same-origin',headers:data===undefined?{}:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:data===undefined?undefined:JSON.stringify(data)});let value=await r.json();if(r.status===401&&path!=='login'){showLogin();throw Error('Войдите в панель.')}if(!r.ok)throw Error(value.error||'Не удалось выполнить запрос.');return value;}
+function showLogin(){clearTimeout(timer);el('login').hidden=false;el('panel').hidden=true;csrf='';candidate=null;el('url').value='';resetWdtt();}
+function error(e){el('error').textContent=e.message||'Связь с сервером прервана. Обновите страницу.';}
+function renderConnections(s){
+ const nodes=(s.connections||[]).filter(n=>!el('sourceFilter').value||n.source===el('sourceFilter').value);el('connectionMode').textContent=s.mode==='manual'?'Режим: выбран вручную':'Режим: автоматически — лучший доступный узел';
+ el('manualHint').hidden=s.mode!=='manual';el('connectionError').textContent=s.connection_error||(s.pinned_missing?'Закреплённый узел отсутствует в обновлённой подписке. Используется его сохранённая конфигурация.':'');
+const signature=JSON.stringify([nodes,catalog]);
+ if(signature!==connectionSignature){
+  connectionSignature=signature;const focused=document.activeElement?.dataset;const restore=focused?.node?{node:focused.node,source:focused.source,action:focused.action}:null;
+  el('connections').replaceChildren(...nodes.map(n=>{
+   const row=document.createElement('div');row.className='connection-row'+(n.selected?' current':'');
+   const info=document.createElement('div');const group=document.createElement('div');group.className='connection-detail';group.textContent=sourceName(n.source);info.append(group);const name=document.createElement('div');name.className='connection-name';name.textContent=n.name;info.append(name);
+   const detail=document.createElement('div');detail.className='connection-detail';
+   if(n.selected||n.manual){const badge=document.createElement('span');badge.className='badge';badge.textContent=n.manual?'Закреплён вручную': 'Сейчас используется';detail.append(badge);}
+   const latency=document.createElement('span');latency.className='latency';latency.textContent=n.transport.toUpperCase()+' · '+(n.measured?(n.latency===null?'Не отвечает':n.latency+' мс'):'Ещё не проверен');detail.append(latency);info.append(detail);
+   if(n.measured){const date=document.createElement('div');date.className='connection-detail';date.textContent='Проверен: '+new Date(n.measured*1000).toLocaleTimeString('ru-RU');info.append(date);}
+   const tools=document.createElement('div');tools.className='connection-tools';
+   for(const [act,label] of [['ping','Проверить задержку'],['select',n.manual?'Выбран':'Выбрать']]){const b=document.createElement('button');b.type='button';b.className='secondary connection-action';b.textContent=label;b.dataset.node=n.id;b.dataset.source=n.source;b.dataset.action=act;b.setAttribute('aria-label',label+': '+sourceName(n.source)+' · '+n.name);tools.append(b);}
+   row.append(info,tools);return row;
+  }));
+  if(restore){const b=[...el('connections').querySelectorAll('button')].find(b=>b.dataset.node===restore.node&&b.dataset.source===restore.source&&b.dataset.action===restore.action);if(b)b.focus({preventScroll:true});}
+ }
+ for(const b of document.querySelectorAll('.connection-action'))b.disabled=busy||!nodes.length;
+}
+async function status(afterLogin=false){try{const s=await api('status');csrf=s.csrf;el('login').hidden=true;el('panel').hidden=false;el('error').textContent='';busy=s.busy;candidate=dirty?null:s.candidate;el('nodes').textContent=s.active.nodes;el('working').textContent=s.active.working??'—';el('updated').textContent=s.active.updated?'Сохранена: '+new Date(s.active.updated*1000).toLocaleString('ru-RU'):'Дата первоначального импорта не записана';el('message').textContent=s.message;el('check').disabled=busy;el('apply').hidden=!candidate;el('apply').disabled=busy;el('rollback').disabled=busy||!s.previous;el('candidate').textContent=candidate?'Проверено: '+candidate.working+' из '+candidate.nodes+' узлов отвечают через HTTPS.':'';renderSources(s);renderConnections(s);if(!wdttBusy&&Date.now()-wdttLoaded>15000)void loadWdtt();if(s.profiles.length&&!dirty){const selected=el('profile').value;el('profileBox').hidden=false;el('profile').replaceChildren(...s.profiles.map(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;return o;}));if([...el('profile').options].some(o=>o.value===selected))el('profile').value=selected;}timer=setTimeout(status,busy?1200:5000);}catch(e){if(afterLogin&&!csrf){error(Error('Вход не сохранился в браузере. Разрешите cookie для этой панели и повторите вход.'));}else if(csrf){error(e);timer=setTimeout(status,5000);}}}
+async function action(name,data){clearTimeout(timer);el('error').textContent='';for(const id of ['check','apply','rollback','toggleFallback','refreshFree'])el(id).disabled=true;for(const b of document.querySelectorAll('.connection-action,.source-action'))b.disabled=true;el('saveSource').disabled=true;try{await api(name,data);}catch(e){error(e);}timer=setTimeout(status,300);}
+el('loginForm').addEventListener('submit',async e=>{e.preventDefault();try{await api('login',{password:el('password').value});el('password').value='';await status(true);}catch(e){error(e);}});
+el('checkForm').addEventListener('submit',e=>{e.preventDefault();dirty=false;action('check',{url:el('url').value.trim(),profile:el('profileBox').hidden?null:Number(el('profile').value)});});
+el('url').addEventListener('input',()=>{dirty=true;candidate=null;el('apply').hidden=true;el('candidate').textContent='';el('profileBox').hidden=true;});
+el('apply').addEventListener('click',()=>{if(candidate){const id=candidate.id;candidate=null;el('url').value='';el('profileBox').hidden=true;action('apply',{id});}});
+el('rollback').addEventListener('click',()=>action('rollback',{}));
+el('auto').addEventListener('click',()=>action('select',{id:null}));
+el('pingAll').addEventListener('click',()=>action('ping',el('sourceFilter').value?{source:el('sourceFilter').value}:{}));
+el('connections').addEventListener('click',e=>{const b=e.target.closest('button[data-node]');if(b&&!b.disabled)action(b.dataset.action,{id:b.dataset.node,source:b.dataset.source});});
+el('toggleFallback').addEventListener('click',()=>action('settings',{enabled:!fallbackEnabled}));
+el('refreshFree').addEventListener('click',()=>action('refresh-free',{}));
+function resetSourceForm(){editingSource=null;el('sourceName').value='';el('sourceUrl').value='';el('sourceFormTitle').textContent='Добавить бесплатную подписку';el('cancelSource').hidden=true;}
+el('sourceForm').addEventListener('submit',e=>{e.preventDefault();const data={name:el('sourceName').value.trim(),url:el('sourceUrl').value.trim(),enabled:editingSource?catalog[editingSource].enabled:true};if(editingSource)data.source=editingSource;action('save-source',data);resetSourceForm();});
+el('cancelSource').addEventListener('click',resetSourceForm);
+el('sourceFilter').addEventListener('change',()=>{connectionSignature='';clearTimeout(timer);status();});
+el('freeSources').addEventListener('click',e=>{const b=e.target.closest('button[data-source]');if(!b||b.disabled)return;const source=b.dataset.source,feed=catalog[source],act=b.dataset.action;if(act==='edit'){editingSource=source;el('sourceName').value=feed.name;el('sourceUrl').value='';el('sourceFormTitle').textContent='Изменить бесплатную подписку';el('cancelSource').hidden=false;el('sourceName').focus();}else if(act==='toggle'){action('save-source',{source,name:feed.name,enabled:!feed.enabled});}else if(act==='filter'){el('sourceFilter').value=source;connectionSignature='';clearTimeout(timer);status();}else{action(act,{source});}});
+el('logout').addEventListener('click',async()=>{try{await api('logout',{});showLogin();}catch(e){error(e);}});
+let wdttUsers=[],wdttSelected=null,wdttBusy=false,wdttLoaded=0,wdttDefaults={},wdttEpoch=0;
+const wdttDate=t=>t?new Date(t*1000).toLocaleString('ru-RU'):'бессрочно';
+const wdttStatus=s=>({active:'Активен',deactivated:'Отключён',expired:'Истёк',expired_retained:'Истёк · сохранён',broken:'Ошибка записи'}[s]||s);
+const wdttBytes=n=>{n=Number(n||0);if(n<1024)return n+' Б';const i=Math.min(4,Math.floor(Math.log(n)/Math.log(1024)));return (n/1024**i).toFixed(1)+' '+['Б','КиБ','МиБ','ГиБ','ТиБ'][i];};
+function closeWdtt(){wdttSelected=null;el('wdttEditor').hidden=true;for(const id of ['wdttSecret','wdttLink','wdttHash','wdttCreatePassword','wdttNewPassword','wdttLabel','wdttPorts'])el(id).value='';for(const id of ['wdttDevices','wdttTraffic','wdttHistory'])el(id).replaceChildren();}
+function resetWdtt(){wdttEpoch++;wdttUsers=[];wdttDefaults={};wdttLoaded=0;closeWdtt();el('wdttUsers').replaceChildren();el('wdttSummary').textContent='';el('wdttMessage').textContent='';el('wdttError').textContent='';}
+function wdttButtons(){for(const b of el('wdttSection').querySelectorAll('button'))b.disabled=wdttBusy;}
+function renderWdtt(){
+ const query=el('wdttSearch').value.toLocaleLowerCase('ru-RU'),filter=el('wdttFilter').value;
+ const users=wdttUsers.filter(u=>(!filter||(filter==='expired'?u.status.startsWith('expired'):u.status===filter))&&[u.label,u.device_name,...(u.devices||[]).map(d=>d.name||d.model||d.device_id)].join(' ').toLocaleLowerCase('ru-RU').includes(query));
+ el('wdttSummary').textContent='Всего: '+wdttUsers.length+(wdttDefaults.limit?' / '+wdttDefaults.limit:'')+' · показано: '+users.length;
+ el('wdttUsers').replaceChildren(...users.map(u=>{const row=document.createElement('div');row.className='connection-row';const info=document.createElement('div');const title=document.createElement('div');title.className='connection-name';title.textContent=u.label||'Без имени · '+u.id.slice(0,8);const detail=document.createElement('div');detail.className='connection-detail';detail.textContent=wdttStatus(u.status)+' · '+(u.shared?'Общий':'Личный')+' · срок: '+wdttDate(u.expires_at)+' · устройств: '+(u.devices||[]).length+' · трафик: '+wdttBytes((u.down_bytes||0)+(u.up_bytes||0));info.append(title,detail);const b=document.createElement('button');b.className='secondary';b.textContent='Управлять';b.dataset.user=u.id;row.append(info,b);return row;}));
+ if(!users.length){const p=document.createElement('p');p.textContent=wdttUsers.length?'Нет пользователей по выбранным условиям.':'Пользователей пока нет.';el('wdttUsers').append(p);}wdttButtons();
+}
+async function loadWdtt(){if(!csrf||wdttBusy)return;wdttBusy=true;wdttButtons();const epoch=wdttEpoch;try{const r=await api('wdtt/users');if(epoch!==wdttEpoch)return;wdttUsers=r.users||[];wdttDefaults=r;wdttLoaded=Date.now();el('wdttError').textContent='';renderWdtt();}catch(e){if(epoch===wdttEpoch)el('wdttError').textContent=e.message;}finally{wdttBusy=false;wdttButtons();}}
+function wdttParagraph(text){const p=document.createElement('p');p.className='device-info';p.textContent=text;return p;}
+function editWdtt(u=null){
+ wdttSelected=u;el('wdttEditor').hidden=false;el('wdttEditorTitle').textContent=u?'Доступ: '+(u.label||u.id.slice(0,8)):'Новый пользователь WDTT';
+ el('wdttLabel').value=u?.label||'';el('wdttHash').value=u?.vk_hash||(!u?wdttDefaults.default_hash:'')||'';el('wdttPorts').value=u?.ports||wdttDefaults.default_ports||'';el('wdttShared').value=String(u?.shared||false);el('wdttCreateFields').hidden=!!u;el('wdttCreateDays').disabled=!!u;el('wdttExisting').hidden=!u;el('wdttCreatePassword').value='';el('wdttNewPassword').value='';
+ el('wdttUserStatus').textContent=u?wdttStatus(u.status)+' · срок: '+wdttDate(u.expires_at):'Пароль можно создать автоматически.';
+ if(u){el('wdttSecret').type='password';el('wdttSecret').value=u.password;el('wdttReveal').textContent='Показать пароль';el('wdttLink').value=u.link||'';el('wdttLinkHint').textContent=u.link?'':'Для ссылки укажите VK-хеш и проверьте публичный адрес сервера.';el('wdttToggle').textContent=u.status==='deactivated'?'Включить доступ':'Отключить доступ';
+ el('wdttTraffic').replaceChildren(...[['today','Сегодня'],['week','За неделю'],['month','За месяц'],['all','Всего']].map(([key,label])=>{const v=u.traffic?.[key]||{};return wdttParagraph(label+': скачано '+wdttBytes(v.down)+' · передано '+wdttBytes(v.up));}));
+ const devices=u.devices?.length?u.devices:(u.device?[u.device]:[]);el('wdttDevices').replaceChildren(...(devices.length?devices.map(d=>wdttParagraph([d.name||d.model||d.device_id,[d.manufacturer,d.model,d.android_version?'Android '+d.android_version:''].filter(Boolean).join(' · '),'IP: '+(d.ip||'—')+' · внешний: '+(d.remote_ip||'—'),'Последняя активность: '+(d.last_seen_at?wdttDate(d.last_seen_at):'нет данных')].join('\n'))):[wdttParagraph('Нет привязанных устройств.')]));
+ el('wdttHistory').replaceChildren(...(u.bind_history?.length?[...u.bind_history].reverse().map(h=>wdttParagraph((h.device_name||h.device_id||'Устройство')+' · '+({active:'Привязано',unbound:'Отвязано',denied_mismatch:'Отклонено: другое устройство'}[h.status]||h.status)+' · '+wdttDate(h.event_at||h.bound_at)+'\n'+[h.remote_ip,h.note].filter(Boolean).join(' · '))):[wdttParagraph('История привязок пуста.')]));}
+ wdttButtons();el('wdttLabel').focus();
+}
+async function wdttAction(operation,data={}){if(wdttBusy)return;wdttBusy=true;wdttButtons();el('wdttError').textContent='';el('wdttMessage').textContent='';const epoch=wdttEpoch;let succeeded=false;try{const r=await api('wdtt/user',{operation,...(wdttSelected?{id:wdttSelected.id}:{}),...data});if(epoch!==wdttEpoch)return;succeeded=true;if(r.user)editWdtt(r.user);else closeWdtt();el('wdttMessage').textContent=operation==='details'?'':r.message||'Готово.';wdttLoaded=0;}catch(e){if(epoch===wdttEpoch)el('wdttError').textContent=e.message;}finally{wdttBusy=false;wdttButtons();}if(succeeded&&epoch===wdttEpoch)await loadWdtt();}
+el('wdttRefresh').addEventListener('click',()=>loadWdtt());
+el('wdttSearch').addEventListener('input',renderWdtt);el('wdttFilter').addEventListener('change',renderWdtt);
+el('wdttNew').addEventListener('click',()=>editWdtt());el('wdttClose').addEventListener('click',closeWdtt);
+el('wdttUsers').addEventListener('click',e=>{const b=e.target.closest('button[data-user]');if(b&&!b.disabled)wdttAction('details',{id:b.dataset.user});});
+el('wdttForm').addEventListener('submit',e=>{e.preventDefault();const data={label:el('wdttLabel').value,vk_hash:el('wdttHash').value,ports:el('wdttPorts').value,shared:el('wdttShared').value==='true'};if(!wdttSelected){data.days=Number(el('wdttCreateDays').value);data.new_password=el('wdttCreatePassword').value;}wdttAction(wdttSelected?'update':'create',data);});
+el('wdttExpiryForm').addEventListener('submit',e=>{e.preventDefault();wdttAction('set-expiry',{days:Number(el('wdttDays').value)});});
+el('wdttPasswordForm').addEventListener('submit',e=>{e.preventDefault();wdttAction('set-password',{new_password:el('wdttNewPassword').value});});
+el('wdttToggle').addEventListener('click',()=>{if(wdttSelected)wdttAction(wdttSelected.status==='deactivated'?'activate':'deactivate');});
+el('wdttUnbind').addEventListener('click',()=>{if(wdttSelected&&confirm('Сбросить привязку всех устройств этого пользователя?'))wdttAction('unbind');});
+el('wdttDelete').addEventListener('click',()=>{if(wdttSelected&&confirm('Удалить пользователя «'+(wdttSelected.label||wdttSelected.id.slice(0,8))+'» и отключить его устройства?'))wdttAction('delete');});
+el('wdttReveal').addEventListener('click',()=>{const show=el('wdttSecret').type==='password';el('wdttSecret').type=show?'text':'password';el('wdttReveal').textContent=show?'Скрыть пароль':'Показать пароль';});
+el('wdttCopy').addEventListener('click',()=>{const field=el('wdttLink');if(!field.value)return;field.focus();field.select();const copied=document.execCommand('copy');el('wdttMessage').textContent=copied?'Ссылка скопирована.':'Ссылка выделена. Нажмите Ctrl+C для копирования.';});
+status();
+</script>
+</html>

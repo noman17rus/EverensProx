@@ -1,0 +1,25 @@
+[Unit]
+Description=EverensProx VLESS and WDTT client provisioning
+After=network-online.target wdtt.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/everensprox-provisioning
+ExecStart=/usr/bin/python3 /opt/everensprox-provisioning/server.py
+Restart=on-failure
+RestartSec=5
+UMask=0077
+StateDirectory=everensprox-provisioning
+StateDirectoryMode=0700
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/everensprox-provisioning
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LimitNOFILE=1024
+
+[Install]
+WantedBy=multi-user.target
