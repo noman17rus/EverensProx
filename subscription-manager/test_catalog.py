@@ -193,9 +193,10 @@ class CatalogHTTPTest(unittest.TestCase):
         cookie = {'Cookie': headers['Set-Cookie'].split(';')[0]}
         _, _, raw = self.request('GET', '/api/status', headers=cookie)
         auth = {**cookie, 'X-CSRF-Token': json.loads(raw)['csrf']}
-        for action in ('save-source', 'delete-source', 'refresh-free'):
+        for action in ('save-source', 'delete-source', 'refresh-free', 'move-source'):
             self.assertEqual(self.request('POST', '/api/' + action, {}, cookie)[0], 403)
             self.assertEqual(self.request('POST', '/api/' + action, {'source': []}, auth)[0], 400)
         with patch.object(self.manager, 'submit') as submit:
             self.assertEqual(self.request('POST', '/api/save-source', {'name': 'New', 'url': 'https://example.org/sub'}, auth)[0], 202)
             self.assertEqual(submit.call_args.args[0], 'save-source')
+            self.assertEqual(self.request('POST', '/api/move-source', {'source': 'free', 'direction': 'bad'}, auth)[0], 400)

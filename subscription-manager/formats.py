@@ -182,12 +182,18 @@ def decode_uri(line):
         if any(len(v) != 1 for v in params.values()):
             raise Invalid('Повторяющиеся параметры VLESS.')
         q = {k: v[0] for k, v in params.items()}
-        allowed = {'type', 'security', 'encryption', 'flow', 'alpn', 'host', 'path', 'serviceName', 'authority', 'mode', 'extra', 'fm', 'headerType'} | {p for _, p in TLS_PARAMS}
+        allowed = {'type', 'security', 'encryption', 'flow', 'alpn', 'host', 'path', 'serviceName', 'authority', 'mode', 'extra', 'fm', 'headerType', 'support-x25519mlkem768'} | {p for _, p in TLS_PARAMS}
         if set(q) - allowed or q.get('headerType', 'none') != 'none':
             raise Invalid('В ссылке VLESS есть неподдерживаемые параметры.')
         if parsed.password is not None or not parsed.hostname or not parsed.port:
             raise Invalid('Некорректная ссылка VLESS.')
         net, security = q.get('type', 'tcp'), q.get('security', 'none')
+        if 'support-x25519mlkem768' in q:
+            if q['support-x25519mlkem768'] not in ('true', 'false', '1', '0'):
+                raise Invalid('Параметр support-x25519mlkem768 должен быть true, false, 1 или 0.')
+            if security != 'reality':
+                raise Invalid('Параметр support-x25519mlkem768 поддерживается только для Reality.')
+            # Mihomo URI hint: Xray negotiates this itself and has no matching setting.
         tls = {k: q[p] for k, p in TLS_PARAMS if p in q}
         if q.get('alpn'):
             tls['alpn'] = q['alpn'].split(',')

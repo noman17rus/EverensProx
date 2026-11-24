@@ -40,6 +40,42 @@ class FormatsTest(unittest.TestCase):
             body, nodes = import_body(URI.replace('type=tcp', 'type=' + transport).encode())
             self.assertEqual(import_body(body)[1], nodes)
 
+    def test_reality_mlkem_hint_values(self):
+        expected = import_body(URI.encode())
+        for value in ('true', 'false', '1', '0'):
+            with self.subTest(value=value):
+                raw = URI.replace('#Node', '&support-x25519mlkem768=' + value + '#Node')
+                self.assertEqual(import_body(raw.encode()), expected)
+
+    def test_reality_mlkem_hint_three_transports(self):
+        transports = [
+            'tcp',
+            'grpc&serviceName=example&authority=grpc.example.com&mode=multi',
+            'xhttp&host=cdn.example.com&path=%2Ftest&mode=auto&extra=%7B%22mode%22%3A%22packet-up%22%7D',
+        ]
+        plain = '\n'.join(URI.replace('type=tcp', 'type=' + transport) for transport in transports)
+        hinted = plain.replace('#Node', '&support-x25519mlkem768=true#Node')
+        body, nodes = import_body(hinted.encode())
+        self.assertEqual((body, nodes), import_body(plain.encode()))
+        self.assertEqual(len(nodes), 3)
+        self.assertEqual([n['streamSettings']['network'] for n in nodes], ['tcp', 'grpc', 'xhttp'])
+        self.assertEqual(import_body(body), (body, nodes))
+        self.assertEqual(import_body(base64.b64encode(hinted.encode())), (body, nodes))
+        self.assertNotIn('support-x25519mlkem768', json.dumps(nodes))
+        self.assertNotIn('supportX25519Mlkem768', json.dumps(nodes))
+
+    def test_reality_mlkem_hint_rejects_invalid(self):
+        for value in ('', 'yes', 'TRUE', '2'):
+            with self.subTest(value=value), self.assertRaisesRegex(Invalid, 'должен быть true, false, 1 или 0'):
+                import_body(URI.replace('#Node', '&support-x25519mlkem768=' + value + '#Node').encode())
+        hinted = URI.replace('#Node', '&support-x25519mlkem768=true#Node')
+        with self.assertRaisesRegex(Invalid, 'только для Reality'):
+            import_body(hinted.replace('security=reality', 'security=tls').encode())
+        with self.assertRaisesRegex(Invalid, 'Повторяющиеся'):
+            import_body(hinted.replace('#Node', '&support-x25519mlkem768=false#Node').encode())
+        with self.assertRaisesRegex(Invalid, 'неподдерживаемые параметры'):
+            import_body(hinted.replace('#Node', '&unknown=true#Node').encode())
+
     def test_happ_default_session_resumption(self):
         node = decode_uri(URI.replace('security=reality', 'security=tls'))
         node['streamSettings']['tlsSettings']['enableSessionResumption'] = False

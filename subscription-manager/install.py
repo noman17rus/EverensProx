@@ -89,7 +89,7 @@ def main():
     for directory in [config_dir, state_dir, destination]:
         directory.mkdir(mode=0o700, parents=True, exist_ok=True)
     source_dir = pathlib.Path(__file__).resolve().parent
-    for name in ['server.py', 'backend.py', 'formats.py', 'index.html', 'password.py', 'wdtt.py']:
+    for name in ['server.py', 'backend.py', 'formats.py', 'index.html', 'password.py', 'wdtt.py', 'warp.py', 'configure_warp.py']:
         shutil.copy2(source_dir / name, destination / name)
     # Give the manager a separate API token so rotating monitoring does not break it.
     result = run('/usr/local/x-ui/x-ui', 'setting', '-getApiToken', '-tokenName', 'everensprox-subscription', '-tokenScope', 'admin')

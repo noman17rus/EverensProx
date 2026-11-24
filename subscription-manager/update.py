@@ -36,7 +36,7 @@ def main():
     backup = pathlib.Path('/root/everensprox-catalog-backup-' + time.strftime('%Y%m%d-%H%M%S'))
     backup.mkdir(mode=0o700)
     service = 'everensprox-subscription'
-    files = ('server.py', 'backend.py', 'formats.py', 'index.html', 'password.py', 'wdtt.py')
+    files = ('server.py', 'backend.py', 'formats.py', 'index.html', 'password.py', 'wdtt.py', 'warp.py', 'configure_warp.py')
     run('systemctl', 'stop', service)
     try:
         if (state / 'pending.json').exists():
@@ -78,7 +78,11 @@ def main():
         run('systemctl', 'stop', service)
         if (backup / 'code').exists():
             for name in files:
-                shutil.copy2(backup / 'code' / name, code / name)
+                original_file = backup / 'code' / name
+                if original_file.exists():
+                    shutil.copy2(original_file, code / name)
+                else:
+                    (code / name).unlink(missing_ok=True)
         if (backup / 'state').exists():
             for path in (backup / 'state').iterdir():
                 if path.is_file():

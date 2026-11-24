@@ -243,6 +243,14 @@ class Probe:
             return self._one(node, timed)
 
     def _one(self, node, timed=False):
+        with self.tunnel(node) as port:
+            if port is None:
+                return None if timed else False
+            return self.curl_latency(port) if timed else self.curl(port)
+
+    @contextlib.contextmanager
+    def tunnel(self, node):
+        """An isolated loopback proxy; never changes the production router."""
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0))
             port = sock.getsockname()[1]
@@ -253,15 +261,17 @@ class Probe:
             try:
                 for _ in range(50):
                     if proc.poll() is not None:
-                        return None if timed else False
+                        yield None
+                        return
                     try:
                         with socket.create_connection(('127.0.0.1', port), .2):
                             break
                     except OSError:
                         time.sleep(.1)
                 else:
-                    return None if timed else False
-                return self.curl_latency(port) if timed else self.curl(port)
+                    yield None
+                    return
+                yield port
             finally:
                 proc.terminate()
                 try:
@@ -291,7 +301,8 @@ class Probe:
             raise Invalid('Не удалось подготовить локальную проверку Reality. Проверьте наличие OpenSSL.') from exc
 
     def routed(self, runtime):
-        socks = next((i for i in runtime['inbounds'] if i['protocol'] == 'socks' and i.get('listen') == '127.0.0.1'), None)
+        socks = next((i for i in runtime['inbounds'] if i['protocol'] == 'socks'
+                      and i.get('listen') == '127.0.0.1' and i.get('tag') != 'warp-probe-in'), None)
         if socks:
             return self.curl(socks['port'], next(iter(socks.get('settings', {}).get('accounts', [])), None))
         # Some home installations have no SOCKS inbound. Exercise their existing
@@ -396,6 +407,8 @@ class Manager:
         self.health_since = 0
         self.next_health = 0
         self.refresh_job = None
+        from warp import Warp
+        self.warp = Warp(self)
 
     def state(self):
         with self.status_lock:
@@ -412,6 +425,7 @@ class Manager:
             **copy.deepcopy(self.source_status.get(source, {})),
         } for source, record in self.sources.items() if source in self.source_ids()}
         result['catalog'] = {key: {'name': value['name'], 'enabled': value['enabled'],
+                                   'kind': value.get('kind', 'free'), 'profile': value.get('profile'),
                                    'next_refresh': value.get('next_refresh')}
                              for key, value in self.catalog().items()}
         result['free_interval'] = FREE_INTERVAL
@@ -432,6 +446,7 @@ class Manager:
         result['mode'] = 'manual' if self.selection.get('id') else 'auto'
         result['pinned_missing'] = bool(self.selection.get('id') and not any(
             self.node_id(n) == self.selection['id'] for n in (self.sources.get(active_source) or {}).get('nodes', [])))
+        result['egress'] = self.warp.state()
         return result
 
     @staticmethod
@@ -465,6 +480,13 @@ class Manager:
         self.selection = selection
 
     def reconcile_selection(self):
+        self.warp.recover()
+        if self.warp.is_active:
+            self.warp.reconcile()
+            return
+        self.reconcile_selection_without_warp()
+
+    def reconcile_selection_without_warp(self):
         nodes = self.runtime_nodes()
         if not nodes:
             raise Invalid('Список узлов Xray пока недоступен.')
@@ -503,10 +525,22 @@ class Manager:
         self.update(message='Проверка задержки завершена. Рабочее подключение не изменялось.')
 
     def select_node(self, node_id, source=None):
+        if self.warp.is_active:
+            raise Invalid('Сначала переключите внешний выход с WARP на подписки.')
         self.panel.preflight()
         active_source = self.active.get('source', 'primary')
         source = source or active_source
-        if node_id and source != 'primary':
+        personal_mode = bool(self.personal_ids()) or self.catalog().get(active_source, {}).get('kind') == 'personal'
+        if node_id and source != 'primary' and personal_mode:
+            order = self.priority_ids()
+            if source not in order:
+                raise Invalid('Сначала включите этот резервный источник и автоматический бесплатный резерв, если он нужен.')
+            for higher in order[:order.index(source)]:
+                if self.sources.get(higher) and self.check_source_health(higher):
+                    raise Invalid('Подписка с более высоким приоритетом работает. Можно проверить резерв, но переключать выход пока нельзя.')
+            if source != active_source and (self.health_result != 'priority-dead:' + active_source or time.time() - self.health_since < 60):
+                raise Invalid('Отказ текущей подписки ещё не подтверждён двумя проверками.')
+        elif node_id and source != 'primary':
             if not self.catalog().get(source, {}).get('enabled', False):
                 raise Invalid('Сначала включите этот резервный источник.')
             if self.check_source_health('primary'):
@@ -525,6 +559,13 @@ class Manager:
             self.reset_health()
             return
         if node_id is None:
+            if personal_mode:
+                # Removing a pin must not bypass failure/recovery confirmation.
+                self.save_selection({'id': None})
+                self.reconcile_selection()
+                self.reset_health()
+                self.update(message='Включён автоматический выбор. Приоритет подписок проверяется автоматически.')
+                return
             # Explicitly leaving manual mode may return immediately to a verified primary.
             try:
                 self.probe.candidates(self.sources['primary']['nodes'])
@@ -580,7 +621,7 @@ class Manager:
         # Let a short background status poll finish instead of rejecting a button click.
         if busy or not self.lock.acquire(timeout=2):
             raise Invalid('Другая операция ещё выполняется.')
-        if self.recovery_needed:
+        if self.recovery_needed or self.warp.journal.exists():
             self.lock.release()
             raise Invalid('Восстановление предыдущей операции ещё не завершено.')
         messages = {'check': 'Проверяем подписку…', 'ping': 'Проверяем задержку узлов…', 'select': 'Переключаем подключение…'}
@@ -591,6 +632,12 @@ class Manager:
         try:
             if action == 'check':
                 self.check(args['url'], args.get('profile'))
+            elif action == 'warp-check':
+                self.warp.check()
+            elif action == 'egress':
+                self.warp.choose(args['mode'])
+            elif action == 'warp-settings':
+                self.warp.settings(args['enabled'])
             elif action == 'ping':
                 self.measure_nodes(args.get('id'), args.get('source'))
             elif action == 'select':
@@ -609,6 +656,8 @@ class Manager:
                 self.save_feed(args)
             elif action == 'delete-source':
                 self.delete_feed(args.get('source'))
+            elif action == 'move-source':
+                self.move_feed(args.get('source'), args.get('direction'))
             elif action == 'apply':
                 if not self.candidate or not secrets.compare_digest(args.get('id', ''), self.candidate['id']) or time.time() - self.candidate['checked'] > 900:
                     raise Invalid('Повторите проверку подписки: результат устарел или уже использован.')
@@ -737,6 +786,33 @@ class Manager:
     def source_ids(self):
         return ['primary', *self.catalog()]
 
+    def personal_ids(self):
+        return [key for key, feed in self.catalog().items() if feed.get('kind') == 'personal' and feed['enabled']]
+
+    def priority_ids(self):
+        return ['primary', *self.personal_ids(), *[key for key, feed in self.catalog().items()
+            if feed.get('kind', 'free') == 'free' and feed['enabled'] and self.sources['enabled']]]
+
+    def feed_interval(self, source):
+        return self.config.get('refresh_interval', 3600) if self.catalog()[source].get('kind') == 'personal' else FREE_INTERVAL
+
+    def move_feed(self, source, direction):
+        if source not in self.catalog() or self.catalog()[source].get('kind') != 'personal' or direction not in ('up', 'down'):
+            raise Invalid('Укажите резервную подписку и направление перемещения.')
+        keys = list(self.catalog())
+        personal = [key for key in keys if self.catalog()[key].get('kind') == 'personal']
+        index = personal.index(source)
+        other = index + (-1 if direction == 'up' else 1)
+        if not 0 <= other < len(personal):
+            return
+        a, b = keys.index(source), keys.index(personal[other])
+        keys[a], keys[b] = keys[b], keys[a]
+        updated = copy.deepcopy(self.sources)
+        updated['catalog'] = {key: updated['catalog'][key] for key in keys}
+        self.save_sources(updated)
+        self.reset_health()
+        self.update(message='Порядок резервных подписок сохранён.')
+
     def save_feed(self, args):
         key = args.get('source')
         if key is not None and key not in self.catalog():
@@ -753,24 +829,32 @@ class Manager:
             raise Invalid('Нужна HTTPS-ссылка без логина в адресе.')
         # Resolving and downloading remain in fetch(), with its public-address checks.
         if key is None and len(self.catalog()) >= 32:
-            raise Invalid('Максимум 32 бесплатные подписки.')
+            raise Invalid('Максимум 32 резервных источника.')
         if key is None:
             key = 'free-' + secrets.token_hex(8)
         old = self.catalog().get(key, {})
-        if (not enabled or old.get('url') != address) and self.active.get('source') == key:
+        kind = args.get('kind', old.get('kind', 'free'))
+        profile = args.get('profile', old.get('profile'))
+        if kind not in ('personal', 'free') or (profile is not None and (type(profile) is not int or profile < 0)):
+            raise Invalid('Укажите тип подписки и корректный номер профиля.')
+        if old and kind != old.get('kind', 'free'):
+            raise Invalid('Тип сохранённой подписки менять нельзя. Создайте новый источник.')
+        if (not enabled or old.get('url') != address or old.get('profile') != profile) and self.active.get('source') == key:
             raise Invalid('Источник сейчас используется. Сначала переключите выход.')
         if any(v['url'] == address for k, v in self.catalog().items() if k != key):
             raise Invalid('Эта ссылка уже есть в каталоге.')
         updated = copy.deepcopy(self.sources)
         updated['catalog'] = copy.deepcopy(self.catalog())
         updated['catalog'][key] = {'name': name.strip(), 'url': address, 'enabled': enabled,
+                                    'kind': kind, 'profile': profile,
                                     'next_refresh': old.get('next_refresh', int(time.time()))}
-        if old.get('url') != address:
+        if old.get('url') != address or old.get('profile') != profile:
             updated[key] = None
             updated['catalog'][key]['next_refresh'] = int(time.time())
         updated.setdefault(key, None)
         self.save_sources(updated)
         self.source_status.setdefault(key, {})
+        self.reset_health()
         self.update(message='Источник сохранён.')
 
     def delete_feed(self, source):
@@ -784,6 +868,7 @@ class Manager:
         updated.pop(source, None)
         self.save_sources(updated)
         self.source_status.pop(source, None)
+        self.reset_health()
         self.update(message='Источник удалён.')
 
     def schedule_free(self, source=None):
@@ -792,14 +877,14 @@ class Manager:
         updated = copy.deepcopy(self.sources)
         updated['catalog'] = copy.deepcopy(self.catalog())
         for key, feed in updated['catalog'].items():
-            if (source is None and feed['enabled']) or key == source:
+            if (source is None and feed['enabled'] and feed.get('kind', 'free') == 'free') or key == source:
                 feed['next_refresh'] = int(time.time())
                 feed['requested'] = True
         self.save_sources(updated)
 
     def reserve_target(self):
-        for key, feed in self.catalog().items():
-            if feed['enabled'] and self.sources.get(key) and self.check_source_health(key):
+        for key in self.priority_ids()[1:]:
+            if self.sources.get(key) and self.check_source_health(key):
                 return key
         return None
 
@@ -826,7 +911,7 @@ class Manager:
             if not self.recovery_needed and source != 'primary' and source in self.catalog():
                 updated = copy.deepcopy(self.sources)
                 updated['catalog'] = copy.deepcopy(self.catalog())
-                updated['catalog'][source]['next_refresh'] = int(time.time()) + FREE_INTERVAL
+                updated['catalog'][source]['next_refresh'] = int(time.time()) + self.feed_interval(source)
                 updated['catalog'][source]['last_error'] = self.source_status.get(source, {}).get('error')
                 updated['catalog'][source].pop('requested', None)
                 self.save_sources(updated)
@@ -850,6 +935,10 @@ class Manager:
                                           checked=int(time.time()), working=record['working'])
 
     def build_free_record(self, source, address):
+        feed = self.catalog().get(source, {})
+        if feed.get('kind') == 'personal':
+            body, nodes = import_body(fetch(address), feed.get('profile'))
+            return self.prepare_record(address, feed.get('profile'), body, nodes)
         batches, skipped = free_batches(fetch(address))
         self.source_status.setdefault(source, {}).update(skipped=skipped, candidates=sum(len(nodes) for _, nodes in batches))
         for body, nodes in batches:
@@ -905,7 +994,7 @@ class Manager:
                 if not self.recovery_needed and feed and feed == job['feed']:
                     updated = copy.deepcopy(self.sources)
                     updated['catalog'] = copy.deepcopy(self.catalog())
-                    updated['catalog'][source]['next_refresh'] = int(time.time()) + FREE_INTERVAL
+                    updated['catalog'][source]['next_refresh'] = int(time.time()) + self.feed_interval(source)
                     updated['catalog'][source]['last_error'] = self.source_status.get(source, {}).get('error')
                     updated['catalog'][source].pop('requested', None)
                     self.save_sources(updated)
@@ -943,6 +1032,12 @@ class Manager:
 
     def health_tick(self):
         """Called under the operation lock. Only completed probes count as evidence."""
+        if self.warp.is_active:
+            return self.warp.health_tick()
+        if self.warp.fallback_enabled:
+            return self.priority_health_tick()
+        if self.personal_ids() or self.catalog().get(self.active.get('source'), {}).get('kind') == 'personal':
+            return self.priority_health_tick()
         now = time.time()
         if now < self.next_health:
             return
@@ -1016,6 +1111,79 @@ class Manager:
         finally:
             self.next_health = time.time() + 60
 
+    def priority_health_tick(self):
+        now = time.time()
+        if now < self.next_health:
+            return
+        source = self.active.get('source', 'primary')
+        try:
+            self.panel.preflight()
+            runtime = json.loads(pathlib.Path(self.config['runtime']).read_text())
+            if node_signature(self.runtime_nodes()) != node_signature(self.active['nodes']):
+                raise Invalid('Рабочая конфигурация Xray изменилась.')
+            order = self.priority_ids()
+            if any(not self.sources.get(key) and not self.catalog()[key].get('last_error') for key in self.personal_ids()):
+                self.update(message='Ожидаем первоначальной проверки резервной подписки.')
+                return
+            higher = order[:order.index(source)] if source in order else order
+            target = next((key for key in higher if self.sources.get(key) and self.check_source_health(key)), None)
+            if target is not None:
+                evidence = 'priority-restored:' + target
+            else:
+                # With emergency WARP enabled, prove the subscription itself:
+                # a successful routed URL may use an earlier direct/pilot rule.
+                alive = source in order and not self.warp.fallback_enabled and self.probe.routed(runtime)
+                if source in order and not alive and self.selection.get('id'):
+                    pinned = next((n for n in self.active['nodes'] if self.node_id(n) == self.selection['id']), None)
+                    alive = bool(pinned and self.probe.latency(pinned) is not None)
+                if source in order and not alive:
+                    alive = self.check_source_health(source)
+                    if alive and self.selection.get('id'):
+                        self.release_failed_pin(source)
+                if alive:
+                    self.health_result = None
+                    return
+                evidence = 'priority-dead:' + source
+            finished = time.time()
+            if self.health_result != evidence:
+                self.health_result, self.health_since = evidence, finished
+                self.update(message='Изменилось состояние подписок; ожидаем повторную проверку перед переключением.')
+                return
+            if finished - self.health_since < 60:
+                return
+            # Scan in priority order again: long free-feed probes must not hide recovery.
+            restored_target = target
+            target = next((key for key in order if self.sources.get(key) and self.check_source_health(key)), None)
+            if target is None:
+                if self.warp.fallback_enabled:
+                    self.warp.activate_automatic()
+                    return
+                self.update(message='Все доступные подписки отказали. Текущая конфигурация сохранена; ожидаем восстановления.')
+                return
+            if target == source:
+                self.health_result = None
+                return
+            if restored_target is not None and target != restored_target:
+                self.health_result = None
+                return
+            if restored_target is None and source in order and order.index(target) < order.index(source):
+                self.health_result, self.health_since = 'priority-restored:' + target, time.time()
+                return
+            # Confirm higher sources once more after checking a lower-priority target.
+            for key in order[:order.index(target)]:
+                if self.sources.get(key) and self.check_source_health(key):
+                    self.health_result = None
+                    return
+            self.apply(self.sources[target], self.panel.preflight(), source=target, remember_previous=False,
+                       selection={'id': None}, update_source=False)
+            label = 'основная подписка' if target == 'primary' else self.catalog()[target]['name']
+            self.update(message='Автоматически включена подписка: ' + label + '.')
+        except Exception:
+            self.health_result = None
+            raise
+        finally:
+            self.next_health = time.time() + 60
+
     def refresh_sources(self):
         for source in self.source_ids():
             if source != 'primary' and not self.catalog()[source]['enabled']:
@@ -1041,12 +1209,18 @@ class Manager:
                         if self.candidate and time.time() - self.candidate['checked'] > 900:
                             self.candidate = None
                             self.update(candidate=None)
-                        if self.candidate:
+                        if self.candidate and not self.warp.is_active:
                             continue
                         try:
                             self.reconcile_selection()
                         except Exception:
                             self.update(connection_error='Не удалось получить состояние Xray. Сохранённый режим будет восстановлен при подключении.')
+                            if self.warp.journal.exists():
+                                continue
+                        if self.candidate:
+                            if self.warp.is_active:
+                                self.warp.health_tick()
+                            continue
                         if time.time() >= next_refresh:
                             self.update(busy=True)
                             next_refresh = time.time() + self.config.get('refresh_interval', 3600)

@@ -183,8 +183,12 @@ class Admin(Handler):
                 return self.reply(200, {}, cookie=SESSION_COOKIE + '=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0')
             if self.path == '/api/wdtt/user':
                 return self.reply(200, self.server.wdtt.execute(args))
-            if self.path not in ('/api/check', '/api/apply', '/api/rollback', '/api/ping', '/api/select', '/api/settings', '/api/refresh-free', '/api/save-source', '/api/delete-source'):
+            if self.path not in ('/api/check', '/api/apply', '/api/rollback', '/api/ping', '/api/select', '/api/settings', '/api/refresh-free', '/api/save-source', '/api/delete-source', '/api/move-source', '/api/warp-check', '/api/egress', '/api/warp-settings'):
                 return self.reply(404, {})
+            if self.path == '/api/egress' and args.get('mode') not in ('subscriptions', 'warp'):
+                raise Invalid('Выберите подписки или WARP.')
+            if self.path == '/api/warp-settings' and type(args.get('enabled')) is not bool:
+                raise Invalid('Укажите, включён ли аварийный резерв WARP.')
             if self.path == '/api/settings' and type(args.get('enabled')) is not bool:
                 raise Invalid('Укажите, включён ли бесплатный резерв.')
             if self.path in ('/api/ping', '/api/select'):
@@ -202,12 +206,14 @@ class Admin(Handler):
                     raise Invalid('Некорректный номер профиля.')
             if self.path == '/api/apply' and not isinstance(args.get('id'), str):
                 raise Invalid('Повторите проверку подписки.')
-            if self.path in ('/api/refresh-free', '/api/delete-source', '/api/save-source'):
+            if self.path in ('/api/refresh-free', '/api/delete-source', '/api/save-source', '/api/move-source'):
                 source = args.get('source')
                 if source is not None and (not isinstance(source, str) or source not in self.server.manager.catalog()):
                     raise Invalid('Неизвестный бесплатный источник.')
                 if self.path == '/api/delete-source' and source is None:
                     raise Invalid('Укажите источник.')
+                if self.path == '/api/move-source' and (source is None or args.get('direction') not in ('up', 'down')):
+                    raise Invalid('Укажите источник и направление перемещения.')
             self.server.manager.submit(self.path.rsplit('/', 1)[1], args)
             self.reply(202, {'accepted': True})
         except Invalid as exc:
