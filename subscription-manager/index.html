@@ -9,22 +9,135 @@
 @media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}}
 .source-more{position:relative}.source-more summary{list-style:none;border:1px solid #354154;border-radius:8px;min-height:34px;padding:6px 11px;font-size:.8rem;color:#d7e0ed;background:#1b2532;cursor:pointer}.source-more summary::-webkit-details-marker{display:none}.source-more[open] summary{border-color:var(--accent)}.source-menu{position:absolute;right:0;top:calc(100% + 7px);min-width:190px;padding:6px;display:grid;gap:4px;background:#1a2533;border:1px solid #41516a;border-radius:10px;box-shadow:0 10px 35px #0008;z-index:12}.source-menu button{text-align:left;border:0;background:transparent}.source-menu button:last-child{color:#ffb6bd}#sourceError,#primaryError,#wdttDialogError{color:#ffb6bd}.drawer-body>.tabs~[role="status"]:not(:empty){margin-top:12px;color:var(--accent)}
 .mobile-nav{display:none}@media(max-width:760px){.desktop-nav{display:none}.mobile-nav{display:inline}.nav-items button{min-width:0;overflow:hidden}}
+.monitor-head-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.range-switch,.mini-switch{display:inline-flex;gap:2px;padding:3px;border:1px solid #354154;background:#101823;border-radius:10px}
+.range-switch button,.mini-switch button{min-height:32px;padding:5px 11px;border:0;background:transparent;color:#9caabd;font-size:.8rem;font-weight:500;border-radius:7px;line-height:1.2;white-space:nowrap}
+.range-switch button[aria-pressed="true"],.mini-switch button[aria-pressed="true"]{background:#1b322e;color:#9af0d3;box-shadow:inset 0 0 0 1px #2c5045}
+.monitor-health{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 0 18px;flex-wrap:wrap}
+.monitor-chips{display:flex;gap:8px;flex-wrap:wrap}
+.monitor-chip{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid #2c3a4c;background:#111a24;border-radius:30px;font-size:.78rem;color:#b7c5d8;white-space:nowrap}
+.monitor-chip:before{content:"";width:7px;height:7px;border-radius:50%;background:#6d7a8c;flex:none}
+.monitor-chip.ok:before{background:#7ce1bf;box-shadow:0 0 0 3px #7ce1bf22}
+.monitor-chip.bad:before{background:#ff8d96;box-shadow:0 0 0 3px #ff8d9622}
+.monitor-chip.unknown:before{background:#78869b}
+.monitor-alert{margin:-6px 0 18px;padding:11px 14px;border:1px solid #8d713e;border-radius:10px;background:#2b2417;color:#f3d49c;font-size:.85rem}
+.monitor-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.kpi{position:relative;background:linear-gradient(150deg,#161f2b,#121923);border:1px solid var(--line);border-radius:13px;padding:15px 16px 18px;min-height:126px;overflow:hidden;min-width:0}
+.kpi-label{font-size:.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi-value{font-size:1.62rem;font-weight:600;letter-spacing:-.04em;margin-top:8px;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.kpi-value small{font-size:.76rem;font-weight:400;color:#8ea0b5;letter-spacing:0}
+.kpi-speed .kpi-value{font-size:1.25rem;white-space:nowrap}
+.kpi-sub{font-size:.74rem;color:#7f8da2;margin-top:5px;overflow-wrap:anywhere}
+.kpi-bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:#202b39}
+.kpi-bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .35s ease}
+.kpi .spark{position:absolute;right:12px;top:14px;width:58px;height:24px;opacity:.9;overflow:visible}
+.monitor-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.monitor-charts>.card+.card{margin-top:0}
+.monitor-chart{display:flex;flex-direction:column;gap:12px;padding:18px 20px;min-width:0}
+.monitor-chart.span-2{grid-column:1/-1}
+.chart-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.chart-head h2{font-size:1rem}
+.chart-head p{font-size:.78rem;margin-top:3px}
+.mchart{position:relative;min-width:0}
+.chart-body{position:relative;width:100%;min-height:160px}
+.chart-body svg{display:block;width:100%;height:auto;overflow:visible}
+.chart-legend{display:flex;gap:14px;flex-wrap:wrap;min-height:18px;margin-bottom:4px;font-size:.78rem;color:#9eacbe}
+.chart-legend-item{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.chart-legend-item i{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+.chart-legend-item strong{color:#e7eef8;font-weight:600;font-variant-numeric:tabular-nums}
+.chart-legend-empty{color:#7f8da2}
+.chart-tip{position:absolute;z-index:4;pointer-events:none;background:#0b121b;border:1px solid #3b4b60;border-radius:9px;padding:8px 10px;box-shadow:0 10px 30px #0008;font-size:.76rem;color:#dbe6f4;min-width:130px}
+.chart-tip b{display:block;color:#8fa1b7;font-weight:500;margin-bottom:4px}
+.chart-tip div{display:flex;justify-content:space-between;gap:14px;margin-top:2px}
+.chart-tip span{color:#9eacbe}
+.chart-foot{font-size:.8rem;color:#93a2b6;border-top:1px solid #222d3b;padding-top:10px}
+.monitor-table-card{margin-top:16px;padding:18px 20px}
+.monitor-table-head{align-items:flex-start;flex-wrap:wrap}
+.monitor-table-tools{display:flex;gap:9px;align-items:center;flex-wrap:wrap;justify-content:flex-end;min-width:0}
+.monitor-table-tools input{width:auto;min-width:120px;max-width:240px;min-height:38px;padding:7px 11px;font-size:.85rem;flex:1 1 140px}
+.monitor-table-tools select{width:auto;min-width:125px;min-height:38px;padding:7px 32px 7px 11px;font-size:.85rem}
+.monitor-table-tools #monitorExport{flex:none;min-height:38px;padding:7px 10px;font-size:.8rem}
+.mtable-wrap{overflow:auto;margin-top:14px;max-height:460px;border:1px solid #253140;border-radius:10px;overscroll-behavior:contain}
+.mtable{width:100%;border-collapse:collapse;min-width:1000px;font-size:.84rem}
+.mtable th{position:sticky;top:0;z-index:1;background:#111923;color:#8c9bb0;font-weight:500;text-align:left;padding:10px 12px;border-bottom:1px solid #2a3545;white-space:nowrap}
+.mtable td{padding:10px 12px;border-bottom:1px solid #1f2937;vertical-align:middle}
+.mtable tr:last-child td{border-bottom:0}
+.mtable tr:hover td{background:#16202c}
+.mtable .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mclient{font-weight:600;overflow-wrap:anywhere;max-width:220px}
+.mproto{display:inline-block;font-size:.7rem;letter-spacing:.04em;padding:2px 7px;border-radius:5px;border:1px solid #36455a;color:#a9b8cc;white-space:nowrap}
+.mproto.wdtt{color:#9dc8ff;border-color:#355273;background:#152238}
+.mproto.vless{color:#9af0d3;border-color:#2c5045;background:#13251f}
+.mstatus{display:inline-flex;align-items:center;gap:5px;font-size:.76rem;color:#9aa8ba;white-space:nowrap}
+.mstatus:before{content:"";width:6px;height:6px;border-radius:50%;background:#6d7a8c;flex:none}
+.mstatus.on:before{background:#7ce1bf}
+.mstatus.off:before{background:#ff8d96}
+.mspeedbar{height:6px;width:110px;background:#1e2937;border-radius:10px;overflow:hidden}
+.mspeedbar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#4e8ef7,#7ce1bf)}
+.monitor-table-card .empty{padding:18px;margin-top:12px}
+.monitor-actions{display:flex;flex-direction:column;align-items:stretch;gap:8px;min-width:190px}
+.monitor-actions .link-button{width:100%}
+.monitor-grafana-link{font-size:.8rem;text-align:center;color:#8fb7ff;padding:2px}
+.monitor-range{display:inline-flex;align-items:center;gap:8px;margin:0;font-size:.8rem;color:#9caabd;white-space:nowrap}
+.monitor-range span{font-size:.78rem;font-weight:500;color:#9caabd}
+.monitor-range select{width:auto;min-width:142px;min-height:38px;padding:6px 34px 6px 11px;font-size:.82rem;background-color:#101823;border-color:#354154;border-radius:10px}
+.monitor-health-main{display:grid;gap:5px;min-width:0}
+#monitorAvailability{font-size:.8rem}
+.monitor-health-banner{display:flex;align-items:flex-start;gap:12px;margin:-4px 0 18px;padding:12px 15px;border:1px solid #2c5045;background:#12241e;border-radius:11px;color:#b8e8d5}
+.monitor-health-banner[hidden]{display:none}
+.monitor-health-banner.warn{border-color:#8d713e;background:#2b2417;color:#f3d49c}
+.monitor-health-banner.crit{border-color:#87464d;background:#3c2128;color:#ffccd0}
+.monitor-health-banner.unknown{border-color:#354154;background:#141b25;color:#9aa8ba}
+.monitor-health-mark{width:10px;height:10px;border-radius:50%;background:#7ce1bf;margin-top:5px;flex:none;box-shadow:0 0 0 4px #7ce1bf1f}
+.monitor-health-banner.warn .monitor-health-mark{background:#ffcf7a;box-shadow:0 0 0 4px #ffcf7a1f}
+.monitor-health-banner.crit .monitor-health-mark{background:#ff8d96;box-shadow:0 0 0 4px #ff8d961f}
+.monitor-health-banner.unknown .monitor-health-mark{background:#6d7a8c;box-shadow:none}
+.monitor-health-copy{flex:1;min-width:0}
+.monitor-health-copy strong{display:block;font-size:.9rem;font-weight:600}
+.monitor-health-copy p{font-size:.8rem;color:inherit;opacity:.8;margin-top:3px;overflow-wrap:anywhere}
+.monitor-health-banner button{align-self:center;flex:none}
+.monitor-diagnostics-card{margin-top:16px;padding:18px 20px}
+.monitor-diag-head{align-items:flex-start;flex-wrap:wrap}
+.monitor-badge{display:inline-flex;align-items:center;gap:6px;font-size:.76rem;padding:4px 9px;border-radius:20px;border:1px solid #2c5045;background:#13251f;color:#9af0d3;white-space:nowrap}
+.monitor-badge.warn{border-color:#8d713e;background:#2b2417;color:#f3d49c}
+.monitor-badge.crit{border-color:#87464d;background:#3c2128;color:#ffccd0}
+.monitor-badge.unknown{border-color:#354154;background:#141b25;color:#9aa8ba}
+.diag-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px}
+.diag-item{background:#111a24;border:1px solid #243041;border-radius:10px;padding:11px 12px;min-width:0}
+.diag-item span{display:block;font-size:.73rem;color:#8b9aaf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.diag-item strong{display:block;font-size:1.08rem;font-weight:600;margin-top:5px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.diag-item small{display:block;font-size:.7rem;color:#718096;margin-top:3px;overflow-wrap:anywhere}
+.diag-item.alert{border-color:#8d713e}
+.diag-item.critical{border-color:#87464d}
+#monitorContext{margin-top:12px;font-size:.8rem}
+.diag-issues{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:6px}
+.diag-issues li{font-size:.82rem;color:#b8c6d8;padding:7px 9px;border-left:2px solid #8d713e;background:#1a2029;border-radius:0 6px 6px 0}
+.diag-issues li.critical{border-left-color:#ff8d96;color:#ffccd0}
+.diag-issues li.ok{border-left-color:#7ce1bf;color:#9ee9c8}
+.mtable-sort{display:inline-flex;align-items:center;gap:5px;min-height:24px;padding:0;border:0;background:transparent;color:inherit;font:inherit;font-weight:500;cursor:pointer;white-space:nowrap}
+.mtable-sort:hover{color:#e4edf8}
+.mtable-sort .sort-arrow{color:#7ce1bf;font-size:.72rem}
+.mtable th[aria-sort="ascending"] .mtable-sort,.mtable th[aria-sort="descending"] .mtable-sort{color:#e4edf8}
+.mtable th[aria-sort="none"] .mtable-sort{color:#8c9bb0}
+@media(max-width:1200px){.monitor-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:1050px){.monitor-charts{grid-template-columns:1fr}.monitor-chart.span-2{grid-column:auto}.monitor-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.diag-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.nav-items{grid-template-columns:repeat(5,minmax(0,1fr))}.nav-items button{font-size:.68rem}.monitor-head-actions{width:100%}.monitor-range{flex:1 0 100%;justify-content:space-between}.monitor-range select{flex:1;min-width:0}.monitor-head-actions #monitorPause,.monitor-head-actions #monitorGrafana{flex:1;justify-content:center;text-align:center}.monitor-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.kpi{min-height:112px;padding:13px 13px 16px}.kpi-value{font-size:1.35rem}.kpi-speed .kpi-value{font-size:1.08rem}.kpi .spark{display:none}.monitor-chart,.monitor-table-card{padding:15px}.monitor-diagnostics-card{padding:15px}.monitor-health{gap:8px}.monitor-chips{gap:5px}.monitor-chip{font-size:.72rem;padding:4px 8px}.monitor-table-tools{width:100%}.monitor-table-tools input{flex:1 0 100%;max-width:none;min-width:0}.monitor-table-tools select{flex:1;min-width:0}.mtable{min-width:760px}.mtable th:nth-child(8),.mtable td:nth-child(8),.mtable th:nth-child(9),.mtable td:nth-child(9){display:none}.mclient{max-width:150px}.mspeedbar{width:70px}.monitor-actions{width:100%;min-width:0}.chart-head{gap:8px}.diag-grid{gap:8px}.diag-item{padding:10px}.diag-item strong{font-size:1rem}.monitor-health-banner{padding:11px 12px}.monitor-health-banner button{display:none}}
 </style>
 <section id="login" class="card login-screen"><div class="logo"><span class="logo-mark">E</span><div><strong>EverensProx</strong><small>Домашний сервер</small></div></div><h1>Вход в управление</h1><p>Подписки, подключения и доступы WDTT в одном месте.</p><form id="loginForm"><label for="password">Пароль панели</label><input id="password" type="password" autocomplete="current-password" required><div class="actions"><button>Войти</button></div></form><p class="hint">Панель доступна из домашней сети.</p></section>
 <div id="panel" hidden>
-<aside class="sidebar"><div class="logo"><span class="logo-mark">E</span><div><strong>EverensProx</strong><small>Домашний сервер</small></div></div><div class="nav-label">Управление</div><nav class="nav-items" aria-label="Основная навигация"><button id="nav-home" data-view="home" aria-controls="view-home" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>Обзор</span></button><button id="nav-subs" data-view="subs" aria-controls="view-subs" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h4"/></svg><span>Подписки</span></button><button id="nav-nodes" data-view="nodes" aria-controls="view-nodes" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg><span>Подключения</span></button><button id="nav-users" aria-label="Пользователи WDTT" data-view="users" aria-controls="view-users" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6M21 21v-3a6 6 0 0 0-3-5"/></svg><span class="desktop-nav">Пользователи WDTT</span><span class="mobile-nav">WDTT</span></button></nav><div class="sidebar-bottom"><a class="monitor-link" href="http://192.168.1.239:3000/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 3v17h17M8 15l4-5 4 3 5-8"/></svg><span>Мониторинг Grafana</span></a><p class="sidebar-note">Домашняя сеть<br>192.168.1.239</p></div></aside>
-<div class="workspace"><header class="topbar"><div class="topbar-path"><span class="path-prefix">Домашний сервер / </span><span id="pageCrumb">Обзор</span></div><div class="topbar-actions"><a class="monitor-top" href="http://192.168.1.239:3000/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 3v17h17M8 15l4-5 4 3 5-8"/></svg>Мониторинг</a><button id="logout" class="secondary small">Выйти</button></div></header>
+<aside class="sidebar"><div class="logo"><span class="logo-mark">E</span><div><strong>EverensProx</strong><small>Домашний сервер</small></div></div><div class="nav-label">Управление</div><nav class="nav-items" aria-label="Основная навигация"><button id="nav-home" data-view="home" aria-controls="view-home" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>Обзор</span></button><button id="nav-subs" data-view="subs" aria-controls="view-subs" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h4"/></svg><span>Подписки</span></button><button id="nav-nodes" data-view="nodes" aria-controls="view-nodes" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg><span>Подключения</span></button><button id="nav-monitor" data-view="monitor" aria-controls="view-monitor" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 3v17h17M7 15l4-4 3 3 5-7"/></svg><span class="desktop-nav">Мониторинг</span><span class="mobile-nav">Графики</span></button><button id="nav-users" aria-label="Пользователи WDTT" data-view="users" aria-controls="view-users" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6M21 21v-3a6 6 0 0 0-3-5"/></svg><span class="desktop-nav">Пользователи WDTT</span><span class="mobile-nav">WDTT</span></button></nav><div class="sidebar-bottom"><a class="monitor-link" id="sidebarGrafana" data-grafana-link href="http://192.168.1.239:3000/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 3v17h17M8 15l4-5 4 3 5-8"/></svg><span>Grafana · полный доступ</span></a><p class="sidebar-note">Домашняя сеть<br>192.168.1.239</p></div></aside>
+<div class="workspace"><header class="topbar"><div class="topbar-path"><span class="path-prefix">Домашний сервер / </span><span id="pageCrumb">Обзор</span></div><div class="topbar-actions"><a class="monitor-top" id="topMonitor" href="#monitor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 3v17h17M8 15l4-5 4 3 5-8"/></svg>Мониторинг</a><button id="logout" class="secondary small">Выйти</button></div></header>
 <main class="content"><div id="message" class="notice" role="status" aria-live="polite"></div>
 <section id="view-home" class="view" aria-labelledby="homeTitle"><div class="section-head"><div><div class="eyebrow">Центр управления</div><h1 id="homeTitle">Обзор сервера</h1><p>Главное о подключении и быстрый доступ к управлению.</p></div></div>
 <div class="two-col"><article class="card hero-card"><div class="topline"><div class="eyebrow">Общий внешний выход</div><span id="overviewMode" class="status-pill">Автоматический выбор</span></div><h2 id="activeSource">Получаем состояние…</h2><p>Для всех подключений VLESS и WDTT</p><p id="overviewNode" class="current-node">Проверяем используемый узел…</p><p id="overviewPriority" class="hint"></p><div class="actions"><button id="homeConnections">Выбрать подключение</button><button id="homeSubscriptions" class="secondary">Управлять подписками</button></div></article><article class="card"><h2>Быстрые действия</h2><div class="quick-list"><button id="homeAddSource">Добавить резервную подписку<span>HTTPS-ссылка</span></button><button id="homeAddUser">Создать доступ WDTT<span>Личный или общий</span></button><button id="homeCheck">Проверить подключения<span>Без переключения</span></button></div></article></div>
 <div class="metrics"><div class="metric"><span>Узлов в сохранённой подписке</span><strong id="nodes">—</strong><small>Из активной подписки</small></div><div class="metric"><span>Работало при проверке</span><strong id="working">—</strong><small>Результат последнего сохранения</small></div><div class="metric"><span>Пользователей WDTT</span><strong id="overviewUsers">—</strong><small id="overviewUserHint">Загружаем доступы</small></div></div><p id="updated" class="hint"></p>
 <article class="card"><div class="topline"><h2>Аварийный выход WARP</h2><span id="warpMode" class="status-pill">Подписки</span></div><p>WARP используется, когда подписки недоступны, или включается вручную. Действующие правила маршрутизации сохраняются.</p><p id="warpStatus" role="status" aria-live="polite">Получаем состояние WARP…</p><div class="actions" role="group" aria-label="Внешний выход"><button id="egressSubscriptions" class="secondary" aria-pressed="true">Подписки</button><button id="egressWarp" class="secondary" aria-pressed="false">WARP</button><button id="warpCheck" class="secondary">Проверить WARP на сервере</button><button id="warpFallback" class="secondary" aria-pressed="false">Включить аварийный резерв WARP</button></div><p id="warpHint" class="hint"></p></article>
-<article class="card monitor-card"><div class="monitor-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 3v17h17M8 15l4-5 4 3 5-8"/></svg></div><div class="monitor-copy"><h2>Мониторинг сервера</h2><p>Нагрузка, трафик и история подключений в Grafana.</p></div><a class="link-button" href="http://192.168.1.239:3000/" target="_blank" rel="noopener noreferrer">Открыть мониторинг</a></article></section>
+<article class="card monitor-card"><div class="monitor-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 3v17h17M8 15l4-5 4 3 5-8"/></svg></div><div class="monitor-copy"><h2>Мониторинг сервера</h2><p>Нагрузка, трафик и история подключений в Grafana.</p></div><div class="monitor-actions"><button id="homeMonitorOpen" class="link-button">Открыть мониторинг</button><a class="monitor-grafana-link" data-grafana-link href="http://192.168.1.239:3000/" target="_blank" rel="noopener noreferrer">Grafana ↗</a></div></article></section>
 <section id="view-subs" class="view" hidden aria-labelledby="subsTitle"><div class="section-head"><div><div class="eyebrow">Источники подключения</div><h1 id="subsTitle">Подписки</h1><p>Основная подписка, ваши резервы и бесплатные источники.</p></div><div class="actions"><button id="addSource">Добавить подписку</button></div></div>
 <div class="tabs" role="tablist" aria-label="Типы подписок"><button id="subsPersonalTab" role="tab" aria-selected="true" aria-controls="subsPersonal">Мои подписки</button><button id="subsFreeTab" role="tab" aria-selected="false" aria-controls="subsFree">Бесплатный резерв</button></div>
 <div id="subsPersonal" role="tabpanel" aria-labelledby="subsPersonalTab"><article class="card"><div class="primary-info"><div><span class="eyebrow">Первый приоритет</span><h2>Основная подписка</h2><p id="primaryStatus">Получаем состояние…</p></div><button id="replacePrimary" class="secondary">Заменить</button></div><p class="hint">Используется первой. Если все её узлы недоступны, сервер проверяет резервы сверху вниз.</p></article><div class="section-head" style="margin-top:26px"><div><h2>Ваши резервные подписки <span id="personalCount" class="count">0</span></h2><p class="hint">Порядок можно менять кнопками «Выше» и «Ниже».</p></div></div><div id="personalSources" class="source-list"></div><details class="details-note"><summary>Как работает переключение</summary><p>Основная подписка → ваши резервные по порядку → бесплатные, если они включены. Пока работает хотя бы один узел подписки, перехода к следующей нет. Отказ и восстановление подтверждаются двумя проверками с интервалом не менее минуты. Свои подписки обновляются каждый час.</p><div class="actions"><button id="rollback" class="secondary" disabled>Вернуть предыдущую основную</button></div></details></div>
 <div id="subsFree" role="tabpanel" aria-labelledby="subsFreeTab" hidden><div class="inline-banner"><div><h2>Последняя ступень резерва</h2><p id="fallbackState"></p></div><div class="actions flush"><button id="toggleFallback" class="secondary">Включить автоматический резерв</button><button id="refreshFree" class="secondary">Обновить все</button></div></div><p class="section-subtitle hint">Включаются только после отказа основной и всех ваших резервных подписок. Обновляются каждые 12 часов.</p><div id="freeSources" class="source-list"></div></div></section>
-<section id="view-nodes" class="view" hidden aria-labelledby="nodesTitle"><div class="section-head"><div><div class="eyebrow">Маршрут трафика</div><h1 id="nodesTitle">Подключения</h1><p>Нажмите ☆ у любимого узла — меньший пинг остальных не переключит выход.</p></div></div><div class="inline-banner"><div><h2 id="connectionMode">Получаем состояние…</h2><p id="connectionError" class="hint"></p></div><button id="auto" class="secondary connection-action">Автоматически</button></div><p id="manualHint" class="section-subtitle hint" hidden>★ Узел закреплён и используется, пока работает. Нажмите ★ ещё раз, чтобы снять приоритет.</p><div class="filters"><div><label for="sourceFilter">Источник серверов</label><select id="sourceFilter"><option value="">Все источники</option></select></div><div><label for="nodeSearch">Найти узел</label><input id="nodeSearch" type="search" placeholder="Имя или адрес сервера"></div><div class="actions"><button id="pingAll" class="secondary connection-action">Проверить все</button></div></div><div id="connections" class="connection-list"></div><p class="details-note">Задержка — время ответа HTTPS через узел с этого сервера. Проверка не меняет рабочее подключение.</p></section>
+<section id="view-nodes" class="view" hidden aria-labelledby="nodesTitle"><div class="section-head"><div><div class="eyebrow">Маршрут трафика</div><h1 id="nodesTitle">Подключения</h1><p>Нажмите ☆ у любимого узла — меньший пинг остальных не переключит выход.</p></div></div><div class="inline-banner"><div><h2 id="connectionMode">Получаем состояние…</h2><p id="connectionError" class="hint"></p></div><button id="auto" class="secondary connection-action">Автоматически</button></div><p id="manualHint" class="section-subtitle hint" hidden>★ Узел закреплён. Пока он работает, используется он; при сбое включается автовыбор, а после восстановления панель вернётся на него автоматически. Нажмите ★ ещё раз, чтобы снять приоритет.</p><div class="filters"><div><label for="sourceFilter">Источник серверов</label><select id="sourceFilter"><option value="">Все источники</option></select></div><div><label for="nodeSearch">Найти узел</label><input id="nodeSearch" type="search" placeholder="Имя или адрес сервера"></div><div class="actions"><button id="pingAll" class="secondary connection-action">Проверить все</button></div></div><div id="connections" class="connection-list"></div><p class="details-note">Задержка — время ответа HTTPS через узел с этого сервера. Проверка не меняет рабочее подключение.</p></section>
 <section id="view-users" class="view" hidden aria-labelledby="usersTitle"><div id="wdttSection"><div class="section-head"><div><div class="eyebrow">Клиентские доступы</div><h1 id="usersTitle">Пользователи WDTT</h1><p>Те же пользователи, что в боте. Изменения действуют сразу.</p></div><div class="actions"><button id="wdttRefresh" class="secondary">Обновить</button><button id="wdttNew">Создать пользователя</button></div></div><div class="toolbar"><div class="filters"><div><label for="wdttSearch">Поиск</label><input id="wdttSearch" type="search" placeholder="Имя пользователя или устройство"></div><div><label for="wdttFilter">Статус доступа</label><select id="wdttFilter"><option value="">Все пользователи</option><option value="active">Активные</option><option value="deactivated">Отключённые</option><option value="expired">Истёкшие</option></select></div></div></div><p id="wdttSummary" class="user-list-header" role="status"></p><p id="wdttMessage" role="status" aria-live="polite"></p><p id="wdttError" role="alert"></p><div id="wdttUsers" class="connection-list"></div>
 <div id="wdttEditor" class="drawer-layer" role="dialog" aria-modal="true" aria-labelledby="wdttEditorTitle" hidden><div class="drawer"><div class="drawer-head"><div><h2 id="wdttEditorTitle">Пользователь WDTT</h2><p id="wdttUserStatus"></p></div><button id="wdttClose" type="button" class="secondary small">Закрыть</button></div><div class="drawer-body"><div class="tabs" role="tablist" aria-label="Карточка пользователя"><button id="userAccessTab" role="tab" aria-selected="true" aria-controls="userAccess">Подключение</button><button id="userSettingsTab" role="tab" aria-selected="false" aria-controls="userSettings">Настройки</button><button id="userActivityTab" role="tab" aria-selected="false" aria-controls="userActivity">Активность</button></div><div id="wdttDialogMessage" role="status" aria-live="polite"></div><p id="wdttDialogError" role="alert"></p><div id="userSettings" role="tabpanel" aria-labelledby="userSettingsTab" hidden><form id="wdttForm">
 <label for="wdttLabel">Имя пользователя</label><input id="wdttLabel" maxlength="200">
@@ -37,6 +150,14 @@
 <label for="wdttLink">Ссылка подключения WDTT</label><textarea id="wdttLink" readonly rows="4"></textarea><div class="actions"><button id="wdttCopy" class="secondary">Копировать ссылку</button></div><p id="wdttLinkHint" class="hint"></p>
 <div class="actions"><button id="wdttToggle" class="secondary">Отключить доступ</button></div><details><summary>Изменить срок доступа</summary><form id="wdttExpiryForm"><label for="wdttDays">Новый срок от текущего момента, дней (0 — бессрочно)</label><input id="wdttDays" type="number" min="0" max="365" value="30" required><div class="actions"><button class="secondary">Изменить срок</button></div></form></details><details><summary>Пароль и безопасность</summary><form id="wdttPasswordForm"><label for="wdttNewPassword">Новый пароль — 16 символов</label><input id="wdttNewPassword" type="password" minlength="16" maxlength="16" pattern="[ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789]{16}" autocomplete="new-password" required><p class="hint">Латинские буквы и цифры, кроме I, O, i, l, o, 0 и 1. После смены пароля потребуется обновить ссылку на устройствах.</p><div class="actions"><button class="secondary">Сменить пароль</button></div></form><div class="actions"><button id="wdttUnbind" class="secondary">Сбросить привязку устройств</button><button id="wdttDelete" class="secondary danger">Удалить пользователя</button></div></details></div><div id="userActivity" role="tabpanel" aria-labelledby="userActivityTab" hidden><h3>Трафик</h3><div id="wdttTraffic"></div><h3>Устройства</h3><div id="wdttDevices"></div><details><summary>История привязок</summary><div id="wdttHistory"></div></details></div></div></div></div></div>
 </div></section>
+<section id="view-monitor" class="view" hidden aria-labelledby="monitorTitle"><div class="section-head"><div><div class="eyebrow">Телеметрия</div><h1 id="monitorTitle">Мониторинг</h1><p>Нагрузка сервера, скорость клиентов и пропускная способность сети.</p></div><div class="actions monitor-head-actions"><label class="monitor-range"><span>Период</span><select id="monitorRangeSelect" aria-label="Период мониторинга"><optgroup label="Секунды"><option value="5s">5 секунд</option><option value="10s">10 секунд</option><option value="30s">30 секунд</option></optgroup><optgroup label="Минуты"><option value="1m">1 минута</option><option value="5m">5 минут</option><option value="15m">15 минут</option><option value="30m">30 минут</option></optgroup><optgroup label="Часы и дни"><option value="1h" selected>1 час</option><option value="6h">6 часов</option><option value="24h">24 часа</option><option value="7d">7 дней</option><option value="30d">30 дней</option></optgroup></select></label><button type="button" id="monitorPause" class="secondary small" aria-pressed="false">Пауза</button><a class="secondary link-button small" id="monitorGrafana" data-grafana-link href="http://192.168.1.239:3000/" target="_blank" rel="noopener noreferrer">Grafana ↗</a></div></div>
+<div class="monitor-health"><div class="monitor-health-main"><div class="monitor-chips" id="monitorSources"><span class="monitor-chip unknown">Проверяем источники…</span></div><p class="hint" id="monitorAvailability">Доступность: —</p></div><p class="hint" id="monitorUpdated">Загружаем данные…</p></div>
+<div id="monitorHealthBanner" class="monitor-health-banner unknown" role="status" aria-live="polite" hidden><span class="monitor-health-mark" aria-hidden="true"></span><div class="monitor-health-copy"><strong id="monitorHealthTitle">Проверяем состояние…</strong><p id="monitorHealthText"></p></div><button type="button" id="monitorHealthMore" class="secondary small" hidden>Подробнее</button></div>
+<div id="monitorAlert" class="monitor-alert" role="status" hidden></div>
+<div class="monitor-kpis" id="monitorKpis"><article class="kpi"><span class="kpi-label">Процессор</span><div class="kpi-value" id="monCpu">—</div><div class="kpi-sub">средняя нагрузка CPU</div><svg class="spark" id="monCpuSpark" aria-hidden="true"></svg><div class="kpi-bar"><i id="monCpuBar"></i></div></article><article class="kpi"><span class="kpi-label">Память</span><div class="kpi-value" id="monRam">—</div><div class="kpi-sub">использование RAM</div><svg class="spark" id="monRamSpark" aria-hidden="true"></svg><div class="kpi-bar"><i id="monRamBar"></i></div></article><article class="kpi"><span class="kpi-label">Диск /</span><div class="kpi-value" id="monDisk">—</div><div class="kpi-sub" id="monDiskSub">корневой раздел</div><div class="kpi-bar"><i id="monDiskBar"></i></div></article><article class="kpi"><span class="kpi-label">Load average</span><div class="kpi-value" id="monLoad">—</div><div class="kpi-sub" id="monLoadSub">за 1 минуту</div></article><article class="kpi"><span class="kpi-label">Клиенты онлайн</span><div class="kpi-value" id="monClients">—</div><div class="kpi-sub" id="monClientsHint">WDTT и VLESS</div></article><article class="kpi kpi-speed"><span class="kpi-label">Скорость клиентов</span><div class="kpi-value" id="monSpeed">—</div><div class="kpi-sub" id="monSpeedHint">за последние 5 минут</div></article></div>
+<div class="monitor-charts"><article class="card monitor-chart span-2"><div class="chart-head"><div><h2>Скорость клиентов</h2><p>Трафик подключений, Мбит/с</p></div><div class="mini-switch" role="group" aria-label="Режим графика"><button type="button" data-traffic-mode="total" aria-pressed="true">Суммарно</button><button type="button" data-traffic-mode="clients" aria-pressed="false">По клиентам</button><button type="button" data-traffic-mode="protocol" aria-pressed="false">По протоколам</button></div></div><div class="mchart" id="chartTraffic"><div class="chart-legend"></div><div class="chart-body"></div><div class="chart-tip" hidden></div></div><div class="chart-foot" id="trafficPeriod">—</div></article><article class="card monitor-chart"><div class="chart-head"><div><h2>Нагрузка сервера</h2><p>CPU и RAM, %</p></div></div><div class="mchart" id="chartLoad"><div class="chart-legend"></div><div class="chart-body"></div><div class="chart-tip" hidden></div></div></article><article class="card monitor-chart"><div class="chart-head"><div><h2>Пропускная способность сети</h2><p>Приём и передача, Мбит/с</p></div></div><div class="mchart" id="chartNetwork"><div class="chart-legend"></div><div class="chart-body"></div><div class="chart-tip" hidden></div></div></article><article class="card monitor-chart span-2"><div class="chart-head"><div><h2>Клиенты онлайн</h2><p>Активные подключения по протоколам</p></div></div><div class="mchart" id="chartOnline"><div class="chart-legend"></div><div class="chart-body"></div><div class="chart-tip" hidden></div></div></article></div>
+<article class="card monitor-diagnostics-card"><div class="topline monitor-diag-head"><div><h2>Диагностика</h2><p class="hint">Здоровье сервера и качество каналов</p></div><span id="monitorHealthBadge" class="monitor-badge unknown">Проверяем…</span></div><div class="diag-grid"><div class="diag-item"><span>Температура CPU</span><strong id="diagTemp">—</strong><small>максимум по ядрам</small></div><div class="diag-item"><span>Swap</span><strong id="diagSwap">—</strong><small>использование подкачки</small></div><div class="diag-item"><span>Inode</span><strong id="diagInode">—</strong><small>корневой раздел</small></div><div class="diag-item"><span>Загрузка диска</span><strong id="diagIo">—</strong><small>io time за минуту</small></div><div class="diag-item"><span>TCP-соединения</span><strong id="diagTcp">—</strong><small>установлено сейчас</small></div><div class="diag-item"><span>Ошибки WDTT</span><strong id="diagWdtt">—</strong><small>рукопожатия в секунду</small></div><div class="diag-item"><span>Ошибки сети</span><strong id="diagNet">—</strong><small>ошибки и дропы в секунду</small></div><div class="diag-item"><span>Нагрузка на ядро</span><strong id="diagLoad">—</strong><small id="diagLoadHint">—</small></div></div><p class="hint" id="monitorContext">Состояние подключения загружается…</p><details class="details-note"><summary>Все предупреждения</summary><ul id="monitorHealthList" class="diag-issues"><li>Проверяем состояние…</li></ul></details></article>
+<article class="card monitor-table-card"><div class="topline monitor-table-head"><div><h2>Клиенты</h2><p class="hint" id="monitorClientsMeta">—</p></div><div class="monitor-table-tools"><input id="monitorSearch" type="search" placeholder="Найти клиента" aria-label="Поиск клиента"><select id="monitorProto" aria-label="Протокол"><option value="">Все протоколы</option><option value="wdtt">WDTT</option><option value="vless">VLESS</option></select><button type="button" id="monitorExport" class="secondary small" title="Скачать CSV">CSV ↓</button></div></div><div class="mtable-wrap"><table class="mtable" id="monitorTable"><thead><tr><th data-sort="name"><button type="button" class="mtable-sort" data-sort="name">Клиент<span class="sort-arrow" aria-hidden="true"></span></button></th><th data-sort="protocol"><button type="button" class="mtable-sort" data-sort="protocol">Протокол<span class="sort-arrow" aria-hidden="true"></span></button></th><th data-sort="online"><button type="button" class="mtable-sort" data-sort="online">Статус<span class="sort-arrow" aria-hidden="true"></span></button></th><th class="num" data-sort="down_bps"><button type="button" class="mtable-sort" data-sort="down_bps">Сейчас ↓<span class="sort-arrow" aria-hidden="true"></span></button></th><th class="num" data-sort="up_bps"><button type="button" class="mtable-sort" data-sort="up_bps">Сейчас ↑<span class="sort-arrow" aria-hidden="true"></span></button></th><th class="num" data-sort="period_down_bytes"><button type="button" class="mtable-sort" data-sort="period_down_bytes">За период ↓<span class="sort-arrow" aria-hidden="true"></span></button></th><th class="num" data-sort="period_up_bytes"><button type="button" class="mtable-sort" data-sort="period_up_bytes">За период ↑<span class="sort-arrow" aria-hidden="true"></span></button></th><th class="num" data-sort="down_bytes"><button type="button" class="mtable-sort" data-sort="down_bytes">Всего ↓<span class="sort-arrow" aria-hidden="true"></span></button></th><th class="num" data-sort="up_bytes"><button type="button" class="mtable-sort" data-sort="up_bytes">Всего ↑<span class="sort-arrow" aria-hidden="true"></span></button></th><th data-sort="share"><button type="button" class="mtable-sort" data-sort="share">Доля<span class="sort-arrow" aria-hidden="true"></span></button></th></tr></thead><tbody id="monitorClients"></tbody></table></div><p class="empty" id="monitorTableEmpty" hidden>Нет клиентов по выбранным условиям.</p></article></section>
 <div id="sourceEditor" class="drawer-layer" role="dialog" aria-modal="true" aria-labelledby="sourceFormTitle" hidden><div class="drawer"><div class="drawer-head"><div><h2 id="sourceFormTitle">Добавить резервную подписку</h2><p>Добавление не меняет текущий выход.</p></div><button id="sourceClose" class="secondary small" type="button">Закрыть</button></div><div class="drawer-body"><p id="sourceError" role="alert"></p><form id="sourceForm"><label for="sourceKind">Тип подписки</label><select id="sourceKind"><option value="personal">Моя резервная подписка</option><option value="free">Бесплатный источник</option></select><label for="sourceName">Название</label><input id="sourceName" maxlength="100" required><label for="sourceUrl">HTTPS-ссылка</label><input id="sourceUrl" type="password" autocomplete="off" placeholder="https://…" maxlength="8192"><p class="hint">При редактировании оставьте ссылку пустой, чтобы сохранить прежнюю.</p><label for="sourceProfile">Номер профиля JSON/Happ (необязательно, начиная с 1)</label><input id="sourceProfile" type="number" min="1" step="1"><p class="hint">Оставьте пустым для VLESS-списка или автоматического выбора профиля.</p><div class="actions"><button id="saveSource">Сохранить источник</button><button id="cancelSource" type="button" class="secondary" hidden>Отмена</button></div></form></div></div></div>
 <div id="primaryEditor" class="drawer-layer" role="dialog" aria-modal="true" aria-labelledby="primaryEditorTitle" hidden><div class="drawer"><div class="drawer-head"><div><h2 id="primaryEditorTitle">Заменить основную подписку</h2><p>Сначала проверка, затем применение.</p></div><button id="primaryClose" class="secondary small">Закрыть</button></div><div class="drawer-body"><p id="primaryError" role="alert"></p><p id="primaryProgress" class="drawer-status" role="status" aria-live="polite"></p><form id="checkForm"><label for="url">Ссылка на подписку</label><input id="url" type="password" placeholder="https://…" autocomplete="off" spellcheck="false" required><p class="hint">VLESS-список, Base64, JSON Xray или Happ. Ссылка хранится только на сервере.</p><div id="profileBox" hidden><label for="profile">Профиль</label><select id="profile"></select></div><div id="candidate" role="status"></div><div class="actions"><button id="check">Проверить</button><button id="apply" type="button" hidden>Применить</button></div></form><p class="details-note">Проверка не меняет рабочий выход и может занять несколько минут. Применение кратковременно прерывает соединения.</p></div></div></div>
 </main></div></div><p id="error" role="alert"></p>
@@ -45,12 +166,13 @@
 const el=id=>document.getElementById(id);let csrf='',candidate=null,timer=null,busy=false,dirty=false,connectionSignature='',fallbackEnabled=false;
 let catalog={},editingSource=null,sourceSignature='',nodeFilterInitialized=false;
 
-const viewNames={home:'Обзор',subs:'Подписки',nodes:'Подключения',users:'Пользователи WDTT'};
+const viewNames={home:'Обзор',subs:'Подписки',nodes:'Подключения',monitor:'Мониторинг',users:'Пользователи WDTT'};
 let currentView='home',lastOpener=null,savingSource=false,applyingPrimary=false;
 function switchView(view){
- if(!viewNames[view])return;currentView=view;
+ if(!viewNames[view])return;const previous=currentView;currentView=view;
  for(const key of Object.keys(viewNames)){el('view-'+key).hidden=key!==view;el('nav-'+key).setAttribute('aria-current',key===view?'page':'false');}
  el('pageCrumb').textContent=viewNames[view];window.scrollTo({top:0,behavior:'instant'});
+ if(view==='monitor')enterMonitor();else if(previous==='monitor')stopMonitor();
 }
 for(const key of Object.keys(viewNames))el('nav-'+key).addEventListener('click',()=>switchView(key));
 function syncModal(){el('panel').dataset.modal=String(['sourceEditor','primaryEditor','wdttEditor'].some(id=>!el(id).hidden));}
@@ -88,10 +210,11 @@ function renderWarp(s){
 }
 function renderOverview(s){
  lastState=s;el('message').dataset.busy=String(s.busy);
- const node=(s.connections||[]).find(n=>n.manual)||(s.connections||[]).find(n=>n.selected);
+ const pinned=(s.connections||[]).find(n=>n.manual);
+ const node=s.pin_suspended?((s.connections||[]).find(n=>n.selected)||pinned):(pinned||(s.connections||[]).find(n=>n.selected));
  el('overviewNode').textContent=node?node.name:'Узел уточняется после подключения к Xray';
- el('overviewMode').textContent=s.mode==='manual'?'★ Приоритетный узел':'Автоматический выбор';
- el('overviewPriority').textContent=s.mode==='manual'?'Удерживаем выбранный узел, пока он работает.':'Сервер выбирает доступный узел автоматически.';
+ el('overviewMode').textContent=s.pin_suspended?'Автоматический выбор · ★ ждёт восстановления':(s.mode==='manual'?'★ Приоритетный узел':'Автоматический выбор');
+ el('overviewPriority').textContent=s.pin_suspended?'Приоритетный узел временно недоступен. Вернёмся на него автоматически, когда он восстановится.':(s.mode==='manual'?'Удерживаем выбранный узел, пока он работает.':'Сервер выбирает доступный узел автоматически.');
  el('personalCount').textContent=String(Object.values(s.catalog||{}).filter(f=>f.kind==='personal').length);
  el('primaryProgress').textContent=s.message;
  if(savingSource&&!s.busy){savingSource=false;if(s.message==='Источник сохранён.'){resetSourceForm();closeDrawer('sourceEditor');}else{el('sourceError').textContent=s.message;}}
@@ -126,11 +249,11 @@ function renderSources(s){
  }
 }
 async function api(path,data){const r=await fetch('/api/'+path,{method:data===undefined?'GET':'POST',credentials:'same-origin',headers:data===undefined?{}:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:data===undefined?undefined:JSON.stringify(data)});let value=await r.json();if(r.status===401&&path!=='login'){showLogin();throw Error('Войдите в панель.')}if(!r.ok)throw Error(value.error||'Не удалось выполнить запрос.');return value;}
-function showLogin(){savingSource=false;applyingPrimary=false;nodeFilterInitialized=false;lastState=null;clearTimeout(timer);el('login').hidden=false;el('panel').hidden=true;csrf='';candidate=null;el('url').value='';resetWdtt();resetSourceForm();el('sourceEditor').hidden=true;el('primaryEditor').hidden=true;syncModal();}
+function showLogin(){savingSource=false;applyingPrimary=false;nodeFilterInitialized=false;lastState=null;clearTimeout(timer);stopMonitor();monitorData=null;el('login').hidden=false;el('panel').hidden=true;csrf='';candidate=null;el('url').value='';resetWdtt();resetSourceForm();el('sourceEditor').hidden=true;el('primaryEditor').hidden=true;syncModal();}
 function error(e){const text=e.message||'Связь с сервером прервана. Обновите страницу.';el('error').textContent=text;if(!el('sourceEditor').hidden)el('sourceError').textContent=text;if(!el('primaryEditor').hidden)el('primaryError').textContent=text;}
 function renderConnections(s){
- const query=el('nodeSearch').value.toLocaleLowerCase('ru-RU');const nodes=(s.connections||[]).filter(n=>(!el('sourceFilter').value||n.source===el('sourceFilter').value)&&(!query||(n.name+' '+n.transport).toLocaleLowerCase('ru-RU').includes(query)));el('connectionMode').textContent=s.mode==='manual'?'Режим: ★ приоритетный узел':'Режим: автоматически — лучший доступный узел';
- if(s.egress?.mode==='warp')el('connectionMode').textContent='Внешний выход: WARP. Проверка узлов подписок доступна без переключения.';el('manualHint').hidden=s.mode!=='manual'||s.egress?.mode==='warp';el('connectionError').textContent=s.connection_error||(s.pinned_missing?'Закреплённый узел отсутствует в обновлённой подписке. Используется его сохранённая конфигурация.':'');
+ const query=el('nodeSearch').value.toLocaleLowerCase('ru-RU');const nodes=(s.connections||[]).filter(n=>(!el('sourceFilter').value||n.source===el('sourceFilter').value)&&(!query||(n.name+' '+n.transport).toLocaleLowerCase('ru-RU').includes(query)));el('connectionMode').textContent=s.pin_suspended?'Режим: автоматически — ★ узел ждёт восстановления':(s.mode==='manual'?'Режим: ★ приоритетный узел':'Режим: автоматически — лучший доступный узел');
+ if(s.egress?.mode==='warp')el('connectionMode').textContent='Внешний выход: WARP. Проверка узлов подписок доступна без переключения.';el('manualHint').hidden=(s.mode!=='manual'&&!s.pin_suspended)||s.egress?.mode==='warp';el('connectionError').textContent=s.connection_error||(s.pinned_missing?'Закреплённый узел отсутствует в обновлённой подписке. Используется его сохранённая конфигурация.':'');
 const signature=JSON.stringify([nodes,catalog]);
  if(signature!==connectionSignature){
   connectionSignature=signature;const focused=document.activeElement?.dataset;const restore=focused?.node?{node:focused.node,source:focused.source,action:focused.action}:null;
@@ -138,7 +261,7 @@ const signature=JSON.stringify([nodes,catalog]);
    const row=document.createElement('div');row.className='connection-row'+(n.selected?' current':'')+(n.manual?' priority':'');
    const info=document.createElement('div');const group=document.createElement('div');group.className='connection-detail';group.textContent=sourceName(n.source);info.append(group);const name=document.createElement('div');name.className='connection-name';name.textContent=n.name;info.append(name);
    const detail=document.createElement('div');detail.className='connection-detail';
-   if(n.selected||n.manual){const badge=document.createElement('span');badge.className='badge';badge.textContent=n.manual?'★ Приоритетный узел': 'Сейчас используется';detail.append(badge);}
+   if(n.selected||n.manual){const badge=document.createElement('span');badge.className='badge';badge.textContent=n.manual?(s.pin_suspended?'★ Приоритетный · ждёт восстановления':'★ Приоритетный узел'): 'Сейчас используется';detail.append(badge);}
    const latency=document.createElement('span');latency.className='latency';latency.textContent=n.transport.toUpperCase()+' · '+(n.measured?(n.latency===null?'Не отвечает':n.latency+' мс'):'Ещё не проверен');detail.append(latency);info.append(detail);
    if(n.measured){const date=document.createElement('div');date.className='connection-detail';date.textContent='Проверен: '+new Date(n.measured*1000).toLocaleTimeString('ru-RU');info.append(date);}
    const tools=document.createElement('div');tools.className='connection-tools';
@@ -211,5 +334,508 @@ el('wdttUnbind').addEventListener('click',()=>{if(wdttSelected&&confirm('Сбр�
 el('wdttDelete').addEventListener('click',()=>{if(wdttSelected&&confirm('Удалить пользователя «'+(wdttSelected.label||wdttSelected.id.slice(0,8))+'» и отключить его устройства?'))wdttAction('delete');});
 el('wdttReveal').addEventListener('click',()=>{const show=el('wdttSecret').type==='password';el('wdttSecret').type=show?'text':'password';el('wdttReveal').textContent=show?'Скрыть пароль':'Показать пароль';});
 el('wdttCopy').addEventListener('click',()=>{const field=el('wdttLink');if(!field.value)return;field.focus();field.select();const copied=document.execCommand('copy');el('wdttMessage').textContent=copied?'Ссылка скопирована.':'Ссылка выделена. Нажмите Ctrl+C для копирования.';el('wdttDialogMessage').textContent=el('wdttMessage').textContent;});
+let monitorRange='1h',monitorTrafficMode='total',monitorPaused=false,monitorData=null,monitorFetched=0,monitorBusy=false,monitorTimer=null,monitorError='',monitorResizeTimer=null;
+let monitorSort={key:'online',dir:-1};
+try{const saved=localStorage.getItem('everensprox.monitor.range');if(['5s','10s','30s','1m','5m','15m','30m','1h','6h','24h','7d','30d'].includes(saved))monitorRange=saved;}catch(e){}
+const MONITOR_LABELS={'5s':'5 с','10s':'10 с','30s':'30 с','1m':'1 мин','5m':'5 мин','15m':'15 мин','30m':'30 мин','1h':'1 ч','6h':'6 ч','24h':'24 ч','7d':'7 д','30d':'30 д'};
+const MONITOR_SHORT=['5s','10s','30s','1m'];
+function monitorRefreshMs(){return MONITOR_SHORT.includes(monitorRange)?5000:['5m','15m','30m'].includes(monitorRange)?10000:15000;}
+function monitorRefreshLabel(){return Math.round(monitorRefreshMs()/1000)+' с';}
+const CHART_COLORS=['#7ce1bf','#79b8ff','#ffcf7a','#ff9d9d','#c7a6ff','#8ee6ff'];
+const SVG_NS='http://www.w3.org/2000/svg';
+
+function monitorText(id,value){el(id).textContent=value;}
+function monitorBytes(value){return wdttBytes(value).replace('.',',');}
+function monitorPct(value){return value==null?'—':Number(value).toFixed(1).replace('.',',')+'%';}
+function monitorNumber(value){return value==null?'—':Number(value).toFixed(2).replace('.',',');}
+function monitorBps(value){
+ const n=Number(value)||0;
+ if(n>=1e9)return (n/1e9).toFixed(2).replace('.',',')+' Гбит/с';
+ if(n>=1e6)return (n/1e6).toFixed(n>=1e7?1:2).replace('.',',')+' Мбит/с';
+ if(n>=1e3)return (n/1e3).toFixed(1).replace('.',',')+' Кбит/с';
+ return Math.round(n)+' бит/с';
+}
+function monitorAxis(value,unit){
+ if(unit==='percent')return Math.round(value)+'%';
+ if(unit==='clients')return String(Math.round(value));
+ const n=Number(value)||0;
+ if(n>=1e9)return (n/1e9).toFixed(1).replace('.',',')+'G';
+ if(n>=1e6)return (n/1e6).toFixed(1).replace('.',',')+'M';
+ if(n>=1e3)return Math.round(n/1e3)+'K';
+ return String(Math.round(n));
+}
+function monitorValue(value,unit){
+ if(unit==='percent')return monitorPct(value);
+ if(unit==='clients')return String(Math.round(Number(value)||0));
+ return monitorBps(value);
+}
+function monitorUptime(seconds){
+ if(seconds==null)return '—';
+ const total=Math.max(0,Math.floor(seconds));
+ const days=Math.floor(total/86400),hours=Math.floor(total%86400/3600);
+ return days?days+' д '+hours+' ч':hours+' ч';
+}
+function monitorTick(timestamp){
+ const date=new Date(timestamp*1000);
+ if(monitorRange==='7d'||monitorRange==='30d')return date.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'});
+ if(monitorRange==='5s'||monitorRange==='10s'||monitorRange==='30s'||monitorRange==='1m')return date.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ return date.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+}
+function svgEl(tag,attrs,text){
+ const node=document.createElementNS(SVG_NS,tag);
+ if(attrs)for(const key in attrs)node.setAttribute(key,attrs[key]);
+ if(text!==undefined)node.textContent=text;
+ return node;
+}
+function nearestPoint(points,target){
+ let low=0,high=points.length-1;
+ while(low<high){const middle=(low+high)>>1;if(points[middle][0]<target)low=middle+1;else high=middle;}
+ const current=points[low],previous=points[Math.max(0,low-1)];
+ return Math.abs(current[0]-target)<Math.abs(previous[0]-target)?current:previous;
+}
+function niceCeil(value){
+ if(!value||value<1)return 1;
+ const power=Math.pow(10,Math.floor(Math.log10(value)));
+ const ratio=value/power;
+ const step=ratio<=1?1:ratio<=2?2:ratio<=5?5:10;
+ return step*power;
+}
+function drawSpark(target,points,color){
+ if(!target)return;
+ target.replaceChildren();
+ const data=(points||[]).filter(point=>Array.isArray(point)&&point.length>1&&Number.isFinite(point[0])&&Number.isFinite(point[1]));
+ if(!data.length)return;
+ const width=100,height=28;
+ target.setAttribute('viewBox','0 0 '+width+' '+height);
+ target.setAttribute('preserveAspectRatio','none');
+ let low=Infinity,high=-Infinity;
+ for(const point of data){low=Math.min(low,point[1]);high=Math.max(high,point[1]);}
+ if(high<=low)high=low+1;
+ const x=index=>data.length===1?0:index/(data.length-1)*width;
+ const y=value=>height-( (value-low)/(high-low) )*(height-4)-2;
+ let line='',area='';
+ data.forEach((point,index)=>{const command=(index===0?'M':'L')+x(index).toFixed(1)+' '+y(point[1]).toFixed(1);line+=command;area+=command;});
+ area+='L'+width+' '+height+'L0 '+height+'Z';
+ target.append(svgEl('path',{d:area,fill:color,'fill-opacity':'0.14',stroke:'none'}));
+ target.append(svgEl('path',{d:line,fill:'none',stroke:color,'stroke-width':'2','stroke-linecap':'round','stroke-linejoin':'round','vector-effect':'non-scaling-stroke'}));
+}
+function drawChart(id,series,options={}){
+ const host=el(id);
+ if(!host)return;
+ const body=host.querySelector('.chart-body'),legend=host.querySelector('.chart-legend'),tip=host.querySelector('.chart-tip');
+ const data=(series||[]).filter(item=>item&&Array.isArray(item.points)&&item.points.length).map((item,index)=>({name:item.name||'Без имени',color:item.color||CHART_COLORS[index%CHART_COLORS.length],points:item.points}));
+ legend.replaceChildren();
+ if(!data.length){
+  const empty=document.createElement('span');empty.className='chart-legend-empty';empty.textContent='Нет данных за выбранный период';legend.append(empty);
+  body.replaceChildren();tip.hidden=true;return;
+ }
+ const width=Math.max(260,Math.round(body.clientWidth||600)),height=options.height||240;
+ const pad={left:54,right:16,top:12,bottom:30};
+ const plotWidth=width-pad.left-pad.right,plotHeight=height-pad.top-pad.bottom;
+ let xMin=Infinity,xMax=-Infinity,yMax=0;
+ for(const item of data)for(const point of item.points){xMin=Math.min(xMin,point[0]);xMax=Math.max(xMax,point[0]);yMax=Math.max(yMax,point[1]);}
+ if(!Number.isFinite(xMin)||!Number.isFinite(xMax)){body.replaceChildren();return;}
+ if(xMax<=xMin)xMax=xMin+1;
+ if(options.unit==='percent')yMax=100;
+ else if(options.unit==='clients')yMax=Math.max(1,Math.ceil(yMax));
+ else yMax=niceCeil(yMax);
+ const svg=svgEl('svg',{viewBox:'0 0 '+width+' '+height,width:width,height:height,role:'img','aria-label':options.label||'График мониторинга'});
+ const defs=svgEl('defs');svg.append(defs);
+ data.forEach((item,index)=>{
+  if(!options.area)return;
+  const gradient=svgEl('linearGradient',{id:'grad-'+id+'-'+index,x1:'0',y1:'0',x2:'0',y2:'1'});
+  gradient.append(svgEl('stop',{offset:'0%','stop-color':item.color,'stop-opacity':'0.30'}));
+  gradient.append(svgEl('stop',{offset:'100%','stop-color':item.color,'stop-opacity':'0'}));
+  defs.append(gradient);
+ });
+ for(let index=0;index<=4;index++){
+  const y=pad.top+plotHeight*index/4;
+  svg.append(svgEl('line',{x1:pad.left,y1:y,x2:width-pad.right,y2:y,stroke:'#223041','stroke-width':'1'}));
+  svg.append(svgEl('text',{x:pad.left-9,y:y+3.5,'text-anchor':'end',fill:'#7f8da2','font-size':'10.5'},monitorAxis(yMax*(1-index/4),options.unit)));
+ }
+ for(let index=0;index<=4;index++){
+  const x=pad.left+plotWidth*index/4;
+  const timestamp=xMin+(xMax-xMin)*index/4;
+  svg.append(svgEl('text',{x:x,y:height-8,'text-anchor':index===0?'start':index===4?'end':'middle',fill:'#7f8da2','font-size':'10.5'},monitorTick(timestamp)));
+ }
+ const pointX=timestamp=>pad.left+(timestamp-xMin)/(xMax-xMin)*plotWidth;
+ const pointY=value=>pad.top+(1-value/yMax)*plotHeight;
+ data.forEach((item,index)=>{
+  let line='',area='';
+  item.points.forEach((point,pointIndex)=>{
+   const command=(pointIndex===0?'M':'L')+pointX(point[0]).toFixed(1)+' '+pointY(point[1]).toFixed(1);
+   line+=command;area+=command;
+  });
+  if(options.area){
+   const first=item.points[0],last=item.points[item.points.length-1];
+   area+='L'+pointX(last[0]).toFixed(1)+' '+(pad.top+plotHeight)+'L'+pointX(first[0]).toFixed(1)+' '+(pad.top+plotHeight)+'Z';
+   svg.append(svgEl('path',{d:area,fill:'url(#grad-'+id+'-'+index+')',stroke:'none'}));
+  }
+  svg.append(svgEl('path',{d:line,fill:'none',stroke:item.color,'stroke-width':'2.2','stroke-linecap':'round','stroke-linejoin':'round','vector-effect':'non-scaling-stroke'}));
+ });
+ const cross=svgEl('line',{x1:0,y1:pad.top,x2:0,y2:pad.top+plotHeight,stroke:'#8fa1b7','stroke-width':'1','stroke-dasharray':'3 4',opacity:'0'});
+ const dots=svgEl('g');
+ const overlay=svgEl('rect',{x:pad.left,y:pad.top,width:plotWidth,height:plotHeight,fill:'transparent'});
+ overlay.style.cursor='crosshair';
+ svg.append(cross,dots,overlay);
+ body.replaceChildren(svg);
+ const hideTip=()=>{tip.hidden=true;cross.setAttribute('opacity','0');dots.replaceChildren();};
+ overlay.addEventListener('pointerleave',hideTip);
+ overlay.addEventListener('pointermove',event=>{
+  const rect=svg.getBoundingClientRect();
+  if(!rect.width)return;
+  const localX=(event.clientX-rect.left)*(width/rect.width);
+  if(localX<pad.left||localX>pad.left+plotWidth)return hideTip();
+  const targetTime=xMin+(localX-pad.left)/plotWidth*(xMax-xMin);
+  const primary=nearestPoint(data[0].points,targetTime);
+  const crossX=pointX(primary[0]);
+  cross.setAttribute('x1',crossX);cross.setAttribute('x2',crossX);cross.setAttribute('opacity','1');
+  dots.replaceChildren();
+  const tooltipRows=[];
+  for(const item of data){
+   const point=nearestPoint(item.points,primary[0]);
+   dots.append(svgEl('circle',{cx:pointX(point[0]),cy:pointY(point[1]),r:'3',fill:item.color,stroke:'#0c1016','stroke-width':'1.5'}));
+   tooltipRows.push([item.name,point[1]]);
+  }
+  tip.replaceChildren();
+  const stamp=document.createElement('b');
+  stamp.textContent=new Date(primary[0]*1000).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  tip.append(stamp);
+  for(const [name,value] of tooltipRows){
+   const row=document.createElement('div'),label=document.createElement('span'),amount=document.createElement('strong');
+   label.textContent=name;amount.textContent=monitorValue(value,options.unit);row.append(label,amount);tip.append(row);
+  }
+  tip.hidden=false;
+  let left=crossX+12;
+  if(left+180>width)left=crossX-190;
+  tip.style.left=Math.max(4,left)+'px';tip.style.top='6px';
+ });
+ data.forEach(item=>{
+  const last=item.points[item.points.length-1];
+  const row=document.createElement('span');row.className='chart-legend-item';
+  const dot=document.createElement('i');dot.style.background=item.color;
+  const name=document.createElement('span');name.textContent=item.name;
+  const value=document.createElement('strong');value.textContent=monitorValue(last[1],options.unit);
+  row.append(dot,name,value);legend.append(row);
+ });
+}
+function renderMonitorCharts(){
+ if(!monitorData)return;
+ const showArea=!['5s','10s','30s'].includes(monitorRange);
+ if(monitorTrafficMode==='clients'){
+  const clients=(monitorData.series.clients||[]).slice().sort((left,right)=>right.points[right.points.length-1][1]-left.points[left.points.length-1][1]).slice(0,6);
+  drawChart('chartTraffic',clients.map((item,index)=>({name:item.name+' · '+(item.protocol||'').toUpperCase(),color:CHART_COLORS[index%CHART_COLORS.length],points:item.points})),{unit:'bps',height:280,label:'Скорость клиентов'});
+ }else if(monitorTrafficMode==='protocol'){
+  const protocols=(monitorData.series.protocols||[]).map(item=>({name:item.label.toUpperCase(),color:item.label==='wdtt'?'#79b8ff':'#7ce1bf',points:item.points}));
+  drawChart('chartTraffic',protocols,{unit:'bps',height:280,area:showArea,label:'Скорость по протоколам'});
+ }else{
+  drawChart('chartTraffic',[{name:'↓ к клиентам',color:'#7ce1bf',points:monitorData.series.traffic.down},{name:'↑ от клиентов',color:'#79b8ff',points:monitorData.series.traffic.up}],{unit:'bps',height:280,area:showArea,label:'Суммарная скорость клиентов'});
+ }
+ drawChart('chartLoad',[{name:'CPU',color:'#7ce1bf',points:monitorData.series.cpu},{name:'RAM',color:'#ffcf7a',points:monitorData.series.ram}],{unit:'percent',height:220,area:showArea,label:'Нагрузка CPU и RAM'});
+ drawChart('chartNetwork',[{name:'Приём',color:'#79b8ff',points:monitorData.series.network.rx},{name:'Передача',color:'#7ce1bf',points:monitorData.series.network.tx}],{unit:'bps',height:220,area:showArea,label:'Пропускная способность сети'});
+ drawChart('chartOnline',(monitorData.series.online||[]).map(item=>({name:item.label.toUpperCase(),color:item.label==='wdtt'?'#79b8ff':'#7ce1bf',points:item.points})),{unit:'clients',height:190,label:'Клиенты онлайн'});
+}
+function updateMonitorSources(){
+ if(!monitorData)return;
+ const labels={wdtt:'WDTT',vless:'VLESS',host:'Сервер'};
+ const chips=[];
+ for(const key of ['wdtt','vless','host']){
+  const source=(monitorData.sources||{})[key]||{};
+  const state=source.up===true?'ok':source.up===false?'bad':'unknown';
+  const chip=document.createElement('span');chip.className='monitor-chip '+state;
+  let text=labels[key];
+  if(key!=='host'&&source.online===false)text+=' · онлайн ?';
+  chip.textContent=text;
+  chip.title=key==='host'?'Сбор метрик сервера':((source.up===true?'источник доступен':'источник недоступен')+(source.online===false?' · статус онлайна неизвестен':''));
+  chips.push(chip);
+ }
+ el('monitorSources').replaceChildren(...chips);
+}
+function renderMonitorAvailability(){
+ if(!monitorData)return;
+ const availability=monitorData.availability||{};
+ const parts=[['wdtt','WDTT'],['vless','VLESS'],['collector','Сборщик'],['node','Сервер']].map(([key,label])=>label+' '+(availability[key]==null?'—':monitorPct(availability[key]))).join(' · ');
+ el('monitorAvailability').textContent='Доступность за '+MONITOR_LABELS[monitorRange]+': '+parts;
+}
+function renderMonitorHealth(){
+ if(!monitorData)return;
+ const issues=(monitorData.health||[]).slice();
+ if(monitorError)issues.unshift({level:'warning',code:'stale',title:'Данные не обновляются',detail:monitorError});
+ const level=issues.some(item=>item.level==='critical')?'crit':issues.length?'warn':'ok';
+ const banner=el('monitorHealthBanner');
+ banner.hidden=false;banner.className='monitor-health-banner '+level;
+ monitorText('monitorHealthTitle',level==='crit'?'Требуется внимание':level==='warn'?'Есть предупреждения':'Все системы в норме');
+ if(!issues.length)monitorText('monitorHealthText','Отклонений не обнаружено.');
+ else monitorText('monitorHealthText',issues.slice(0,2).map(item=>item.title).join(' · ')+(issues.length>2?' · ещё '+(issues.length-2):''));
+ el('monitorHealthMore').hidden=issues.length===0;
+ const badge=el('monitorHealthBadge');
+ badge.className='monitor-badge '+level;badge.textContent=level==='crit'?'Проблема':level==='warn'?'Внимание':'В норме';
+ const list=el('monitorHealthList');
+ if(!issues.length){
+  const item=document.createElement('li');item.className='ok';item.textContent='Предупреждений нет.';list.replaceChildren(item);
+ }else{
+  list.replaceChildren(...issues.map(issue=>{
+   const item=document.createElement('li');item.className=issue.level;
+   const title=document.createElement('strong');title.textContent=issue.title;
+   const detail=document.createElement('div');detail.className='hint';detail.textContent=issue.detail||'';
+   item.append(title,detail);return item;
+  }));
+ }
+}
+function diagLevel(value,warning,critical){
+ if(value==null)return '';
+ if(value>=critical)return 'critical';
+ if(value>=warning)return 'alert';
+ return '';
+}
+function diagSet(id,value,level){
+ const node=el(id);node.textContent=value;
+ const item=node.closest('.diag-item');
+ item.classList.remove('alert','critical');
+ if(level)item.classList.add(level);
+}
+function renderMonitorDiagnostics(){
+ if(!monitorData)return;
+ const summary=monitorData.summary||{};
+ diagSet('diagTemp',summary.cpu_temp_c==null?'—':Math.round(summary.cpu_temp_c)+' °C',diagLevel(summary.cpu_temp_c,80,90));
+ diagSet('diagSwap',summary.swap_pct==null?'—':monitorPct(summary.swap_pct),diagLevel(summary.swap_pct,50,80));
+ diagSet('diagInode',summary.inode_pct==null?'—':monitorPct(summary.inode_pct),diagLevel(summary.inode_pct,85,92));
+ diagSet('diagIo',summary.disk_io_pct==null?'—':monitorPct(summary.disk_io_pct),diagLevel(summary.disk_io_pct,80,95));
+ diagSet('diagTcp',summary.tcp_established==null?'—':Number(summary.tcp_established).toLocaleString('ru-RU'),'');
+ diagSet('diagWdtt',summary.wdtt_handshake_fail_rate==null?'—':monitorNumber(summary.wdtt_handshake_fail_rate)+'/с',diagLevel(summary.wdtt_handshake_fail_rate,0.2,1));
+ diagSet('diagNet',summary.net_error_rate==null?'—':monitorNumber(summary.net_error_rate)+'/с',diagLevel(summary.net_error_rate,0.1,1));
+ diagSet('diagLoad',monitorNumber(summary.load_per_core),diagLevel(summary.load_per_core,1.2,2));
+ monitorText('diagLoadHint',summary.cpu_cores?'ядер: '+summary.cpu_cores:'—');
+}
+function renderMonitorContext(){
+ const target=el('monitorContext');
+ if(!target)return;
+ if(!lastState){target.textContent='Состояние подключения загружается…';return;}
+ const egress=lastState.egress||{};
+ if(egress.mode==='warp'){
+  const warp=egress.warp||{};
+  target.textContent='Сейчас: WARP'+(warp.healthy?' · IP '+(warp.ip||'—'):' · проверка не пройдена');
+  return;
+ }
+ const source=lastState.active?.source?sourceName(lastState.active.source):'—';
+ const node=(lastState.connections||[]).find(item=>item.selected);
+ let text='Сейчас: '+source;
+ if(node){
+  text+=' · '+node.name;
+  if(node.measured&&node.latency!=null)text+=' · '+node.latency+' мс';
+ }
+ if(egress.fallback_enabled)text+=' · WARP-резерв включён';
+ target.textContent=text;
+}
+function renderMonitorUnavailable(){
+ const banner=el('monitorHealthBanner');banner.hidden=false;banner.className='monitor-health-banner unknown';
+ monitorText('monitorHealthTitle','Нет данных мониторинга');
+ monitorText('monitorHealthText',monitorError||'Prometheus временно недоступен.');
+ el('monitorHealthMore').hidden=true;
+ const badge=el('monitorHealthBadge');badge.className='monitor-badge unknown';badge.textContent='Нет данных';
+ el('monitorAvailability').textContent='Доступность: —';
+ const item=document.createElement('li');item.className='critical';item.textContent=monitorError||'Нет связи с Prometheus.';el('monitorHealthList').replaceChildren(item);
+}
+function monitorSortValue(row,key){
+ if(key==='share')return (row.down_bps||0)+(row.up_bps||0);
+ if(key==='online')return row.online==null?null:(row.online?2:1);
+ if(key==='name'||key==='protocol')return String(row[key]||'').toLocaleLowerCase('ru-RU');
+ return row[key]==null?null:Number(row[key]);
+}
+function monitorRows(){
+ const query=el('monitorSearch').value.trim().toLocaleLowerCase('ru-RU');
+ const protocol=el('monitorProto').value;
+ const rows=(monitorData.clients||[]).filter(row=>(!protocol||row.protocol===protocol)&&(!query||String(row.name||'').toLocaleLowerCase('ru-RU').includes(query)));
+ rows.sort((left,right)=>{
+  const a=monitorSortValue(left,monitorSort.key),b=monitorSortValue(right,monitorSort.key);
+  if(a==null&&b==null)return 0;
+  if(a==null)return 1;
+  if(b==null)return -1;
+  const result=typeof a==='string'?a.localeCompare(b,'ru'):a-b;
+  return result*monitorSort.dir;
+ });
+ return rows;
+}
+function updateMonitorSortHeaders(){
+ for(const th of el('monitorTable').querySelectorAll('thead th[data-sort]')){
+  const active=th.dataset.sort===monitorSort.key;
+  th.setAttribute('aria-sort',active?(monitorSort.dir>0?'ascending':'descending'):'none');
+  const arrow=th.querySelector('.sort-arrow');
+  if(arrow)arrow.textContent=active?(monitorSort.dir>0?'↑':'↓'):'';
+ }
+}
+function monitorPeriodCell(value){
+ const cell=document.createElement('td');cell.className='num';
+ if(value==null){cell.textContent='—';cell.title='Нет данных за выбранный период.';}
+ else cell.textContent=monitorBytes(value);
+ return cell;
+}
+function monitorCsvCell(value){
+ let text=value==null?'':String(value);
+ if(/^[=+\-@]/.test(text))text="'"+text;
+ return '"'+text.replace(/"/g,'""')+'"';
+}
+function downloadMonitorCsv(){
+ if(!monitorData)return;
+ const rows=monitorRows();
+ const header=['Клиент','Протокол','Статус','Сейчас скачано, бит/с','Сейчас передано, бит/с','За период скачано, байт','За период передано, байт','Всего скачано, байт','Всего передано, байт'];
+ const lines=[header.map(monitorCsvCell).join(',')];
+ for(const row of rows){
+  const status=row.online===true?'Онлайн':row.online===false?'Офлайн':'Неизвестно';
+  lines.push([row.name,row.protocol.toUpperCase(),status,row.down_bps||0,row.up_bps||0,row.period_down_bytes,row.period_up_bytes,row.down_bytes||0,row.up_bytes||0].map(monitorCsvCell).join(','));
+ }
+ const stamp=new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+ const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+ const url=URL.createObjectURL(blob);
+ const link=document.createElement('a');link.href=url;link.download='everensprox-monitoring-'+monitorRange+'-'+stamp+'.csv';
+ document.body.append(link);link.click();link.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function renderMonitorTable(){
+ if(!monitorData)return;
+ const rows=monitorRows();
+ const maxSpeed=Math.max(1,...rows.map(row=>(row.down_bps||0)+(row.up_bps||0)));
+ const body=el('monitorClients');
+ body.replaceChildren(...rows.map(row=>{
+  const tr=document.createElement('tr');
+  const name=document.createElement('td');name.className='mclient';name.textContent=row.name;
+  const protocolCell=document.createElement('td');
+  const protocolBadge=document.createElement('span');protocolBadge.className='mproto '+(row.protocol||'');protocolBadge.textContent=(row.protocol||'—').toUpperCase();protocolCell.append(protocolBadge);
+  const statusCell=document.createElement('td');
+  const status=document.createElement('span');status.className='mstatus '+(row.online===true?'on':row.online===false?'off':'');status.textContent=row.online===true?'Онлайн':row.online===false?'Офлайн':'Неизвестно';statusCell.append(status);
+  const down=document.createElement('td');down.className='num';down.textContent=monitorBps(row.down_bps);
+  const up=document.createElement('td');up.className='num';up.textContent=monitorBps(row.up_bps);
+  const periodDown=monitorPeriodCell(row.period_down_bytes);
+  const periodUp=monitorPeriodCell(row.period_up_bytes);
+  const downTotal=document.createElement('td');downTotal.className='num';downTotal.textContent=monitorBytes(row.down_bytes||0);
+  const upTotal=document.createElement('td');upTotal.className='num';upTotal.textContent=monitorBytes(row.up_bytes||0);
+  const share=document.createElement('td');
+  const bar=document.createElement('div');bar.className='mspeedbar';const fill=document.createElement('i');fill.style.width=Math.max(2,Math.round(((row.down_bps||0)+(row.up_bps||0))/maxSpeed*100))+'%';bar.append(fill);share.append(bar);
+  tr.append(name,protocolCell,statusCell,down,up,periodDown,periodUp,downTotal,upTotal,share);return tr;
+ }));
+ updateMonitorSortHeaders();
+ el('monitorTableEmpty').hidden=rows.length!==0;
+ const total=(monitorData.clients||[]).length;
+ const online=monitorData.summary?.clients_online;
+ el('monitorClientsMeta').textContent='Показано '+rows.length+' из '+total+(online==null?' · онлайн неизвестен':' · онлайн '+online);
+}
+function updateGrafanaLinks(){
+ const base=(monitorData&&monitorData.grafana_url)||('http://'+location.hostname+':3000/d/everensprox-vpn/domashnij-server-c2b7-wdtt-i-vless');
+ const span={'5s':'5s','10s':'10s','30s':'30s','1m':'1m','5m':'5m','15m':'15m','30m':'30m','1h':'1h','6h':'6h','24h':'24h','7d':'7d','30d':'30d'}[monitorRange]||'1h';
+ for(const link of document.querySelectorAll('[data-grafana-link]')){
+  try{
+   const url=new URL(base);url.searchParams.set('orgId','1');url.searchParams.set('from','now-'+span);url.searchParams.set('to','now');url.searchParams.set('refresh',MONITOR_SHORT.includes(monitorRange)?'5s':'30s');link.href=url.toString();
+  }catch(e){link.href=base;}
+ }
+}
+function renderMonitor(){
+ if(!monitorData)return;
+ const summary=monitorData.summary||{};
+ const generated=monitorData.generated?new Date(monitorData.generated*1000):new Date();
+ updateMonitorSources();
+ renderMonitorHealth();
+ renderMonitorAvailability();
+ renderMonitorDiagnostics();
+ renderMonitorContext();
+ el('monitorAlert').hidden=!monitorError;
+ el('monitorAlert').textContent=monitorError||'';
+ el('monitorUpdated').textContent='Обновлено '+generated.toLocaleTimeString('ru-RU')+(monitorPaused?' · пауза':' · автообновление '+monitorRefreshLabel())+(['5s','10s'].includes(monitorRange)?' · источник раз в 15 с':'');
+ monitorText('monCpu',monitorPct(summary.cpu_pct));
+ monitorText('monRam',monitorPct(summary.ram_pct));
+ el('monCpuBar').style.width=Math.max(2,Math.min(100,Number(summary.cpu_pct)||0))+'%';
+ el('monRamBar').style.width=Math.max(2,Math.min(100,Number(summary.ram_pct)||0))+'%';
+ drawSpark(el('monCpuSpark'),monitorData.series.cpu,'#7ce1bf');
+ drawSpark(el('monRamSpark'),monitorData.series.ram,'#ffcf7a');
+ monitorText('monDisk',summary.disk_free_bytes==null?'—':monitorBytes(summary.disk_free_bytes));
+ monitorText('monDiskSub',summary.disk_used_pct==null?'корневой раздел':'занято '+monitorPct(summary.disk_used_pct)+' из '+monitorBytes(summary.disk_total_bytes||0));
+ el('monDiskBar').style.width=Math.max(2,Math.min(100,Number(summary.disk_used_pct)||0))+'%';
+ monitorText('monLoad',monitorNumber(summary.load1));
+ monitorText('monLoadSub','uptime '+monitorUptime(summary.uptime_s));
+ monitorText('monClients',(summary.clients_online==null?'—':summary.clients_online)+' / '+(summary.clients_total??'—'));
+ monitorText('monClientsHint','WDTT '+(summary.clients_online_wdtt??'—')+' · VLESS '+(summary.clients_online_vless??'—'));
+ monitorText('monSpeed','↓ '+monitorBps(summary.down_bps));
+ monitorText('monSpeedHint','↑ '+monitorBps(summary.up_bps));
+ const periodDown=summary.period_down_bytes,periodUp=summary.period_up_bytes;
+ monitorText('trafficPeriod',periodDown==null&&periodUp==null?'Нет данных за период':'За '+MONITOR_LABELS[monitorRange]+': ↓ '+monitorBytes(periodDown||0)+' · ↑ '+monitorBytes(periodUp||0));
+ updateGrafanaLinks();
+ renderMonitorCharts();
+ renderMonitorTable();
+}
+function updateMonitorButtons(){
+ el('monitorRangeSelect').value=monitorRange;
+ for(const button of document.querySelectorAll('[data-traffic-mode]'))button.setAttribute('aria-pressed',String(button.dataset.trafficMode===monitorTrafficMode));
+ el('monitorPause').textContent=monitorPaused?'Продолжить':'Пауза';
+ el('monitorPause').setAttribute('aria-pressed',String(monitorPaused));
+}
+function stopMonitor(){clearTimeout(monitorTimer);monitorTimer=null;}
+function scheduleMonitor(){
+ stopMonitor();
+ if(currentView!=='monitor'||monitorPaused||document.hidden)return;
+ monitorTimer=setTimeout(()=>{loadMonitor();},monitorRefreshMs());
+}
+async function loadMonitor(){
+ if(monitorBusy||!csrf)return;
+ monitorBusy=true;
+ el('monitorUpdated').textContent='Обновляем данные…';
+ try{
+  const data=await api('monitor?range='+encodeURIComponent(monitorRange));
+  monitorData=data;monitorFetched=Date.now();monitorError='';renderMonitor();
+ }catch(e){
+  monitorError=e.message||'Не удалось обновить мониторинг.';
+  el('monitorAlert').hidden=false;el('monitorAlert').textContent=monitorError;
+  if(monitorData)renderMonitor();else{
+   el('monitorUpdated').textContent='Нет связи с мониторингом';
+   el('monitorSources').replaceChildren();
+   const chip=document.createElement('span');chip.className='monitor-chip bad';chip.textContent='Prometheus недоступен';el('monitorSources').append(chip);
+   renderMonitorUnavailable();
+  }
+ }finally{
+  monitorBusy=false;scheduleMonitor();
+ }
+}
+function enterMonitor(){
+ updateMonitorButtons();
+ if(!monitorData||Date.now()-monitorFetched>15000)loadMonitor();
+ else{renderMonitor();scheduleMonitor();}
+}
+el('monitorRangeSelect').addEventListener('change',()=>{
+ monitorRange=el('monitorRangeSelect').value;
+ try{localStorage.setItem('everensprox.monitor.range',monitorRange);}catch(e){}
+ updateMonitorButtons();stopMonitor();loadMonitor();
+});
+for(const button of document.querySelectorAll('[data-traffic-mode]'))button.addEventListener('click',()=>{
+ monitorTrafficMode=button.dataset.trafficMode;updateMonitorButtons();renderMonitorCharts();
+});
+el('monitorPause').addEventListener('click',()=>{
+ monitorPaused=!monitorPaused;updateMonitorButtons();
+ if(monitorPaused){stopMonitor();if(monitorData)renderMonitor();}else loadMonitor();
+});
+el('monitorSearch').addEventListener('input',renderMonitorTable);
+el('monitorProto').addEventListener('change',renderMonitorTable);
+el('monitorExport').addEventListener('click',downloadMonitorCsv);
+el('monitorTable').addEventListener('click',event=>{
+ const target=event.target.closest('[data-sort]');
+ if(!target)return;
+ const key=target.dataset.sort;
+ if(monitorSort.key===key)monitorSort.dir*=-1;
+ else monitorSort={key,dir:(key==='name'||key==='protocol')?1:-1};
+ renderMonitorTable();
+});
+el('monitorHealthMore').addEventListener('click',()=>{
+ const card=document.querySelector('.monitor-diagnostics-card');
+ const details=card?.querySelector('details');
+ if(details)details.open=true;
+ card?.scrollIntoView({behavior:'smooth',block:'center'});
+});
+el('topMonitor').addEventListener('click',event=>{event.preventDefault();switchView('monitor');});
+el('homeMonitorOpen').addEventListener('click',()=>switchView('monitor'));
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden)stopMonitor();
+ else if(currentView==='monitor'&&!monitorPaused)loadMonitor();
+});
+window.addEventListener('resize',()=>{
+ clearTimeout(monitorResizeTimer);
+ monitorResizeTimer=setTimeout(()=>{if(currentView==='monitor'&&monitorData)renderMonitorCharts();},150);
+});
 status();
 </script></html>

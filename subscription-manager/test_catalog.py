@@ -43,15 +43,20 @@ class CatalogTest(unittest.TestCase):
         self.manager.select_node(None)
         self.assertEqual(self.panel.refreshes, 0)
 
-    def test_dead_manual_primary_clears_pin_before_reserve(self):
-        self.manager.select_node(self.manager.node_id(self.primary['nodes'][0]))
+    def test_dead_manual_primary_keeps_pin_and_uses_other_nodes(self):
+        node_id = self.manager.node_id(self.primary['nodes'][0])
+        self.manager.select_node(node_id)
         other = copy.deepcopy(self.primary['nodes'][0])
         other['settings']['vnext'][0]['address'] = 'other.example.com'
         self.manager.sources['primary']['nodes'].append(other)
         self.dead.add('example.com')
         with patch.object(self.probe, 'latency', return_value=None):
             self.tick(1000)
-        self.assertIsNone(self.manager.selection['id'])
+        self.assertEqual(self.manager.selection['id'], node_id)
+        self.assertTrue(self.manager.selection.get('suspended'))
+        self.assertTrue(self.manager.state()['pin_suspended'])
+        self.assertEqual(self.manager.state()['mode'], 'auto')
+        self.assertEqual(self.panel.target, '')
         self.assertEqual(self.manager.active['source'], 'primary')
         self.assertEqual(len(self.manager.active['nodes']), 2)
 

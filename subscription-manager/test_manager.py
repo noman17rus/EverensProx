@@ -335,14 +335,17 @@ class SelectionTest(unittest.TestCase):
         self.manager.reconcile_selection()
         self.assertEqual(self.panel.target, 'pixel-renamed')
 
-    def test_changed_server_with_same_tag_resets_auto(self):
-        self.manager.select_node(self.node_id())
+    def test_changed_server_with_same_tag_suspends_preference(self):
+        node_id = self.node_id()
+        self.manager.select_node(node_id)
         self.runtime['outbounds'][0]['settings']['vnext'][0]['address'] = 'different.example.com'
         atomic(self.root / 'runtime.json', self.runtime)
         self.manager.reconcile_selection()
         self.assertEqual(self.panel.target, '')
         self.assertEqual(self.manager.state()['mode'], 'auto')
-        self.assertIn('исчез', self.manager.state()['message'])
+        self.assertTrue(self.manager.state()['pin_suspended'])
+        self.assertEqual(self.manager.selection['id'], node_id)
+        self.assertIn('временно отсутствует', self.manager.state()['message'])
 
     def test_status_never_exposes_node_credentials(self):
         raw = json.dumps(self.manager.state())

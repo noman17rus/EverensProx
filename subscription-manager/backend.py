@@ -443,8 +443,11 @@ class Manager:
             } for source, n in nodes]
         except (OSError, ValueError):
             result['connections'] = []
-        result['mode'] = 'manual' if self.selection.get('id') else 'auto'
-        result['pinned_missing'] = bool(self.selection.get('id') and not any(
+        pinned = bool(self.selection.get('id'))
+        suspended = bool(pinned and self.selection.get('suspended'))
+        result['mode'] = 'manual' if pinned and not suspended else 'auto'
+        result['pin_suspended'] = suspended
+        result['pinned_missing'] = bool(pinned and not any(
             self.node_id(n) == self.selection['id'] for n in (self.sources.get(active_source) or {}).get('nodes', [])))
         result['egress'] = self.warp.state()
         return result
@@ -479,6 +482,14 @@ class Manager:
         atomic(self.directory / 'selection.json', selection)
         self.selection = selection
 
+    def automatic_selection(self):
+        # Keep a primary-node preference across an automatic source failover so
+        # it can be restored as soon as that node is reachable again.
+        selection = self.selection
+        if selection.get('id') and selection.get('source', 'primary') == 'primary':
+            return copy.deepcopy(selection)
+        return {'id': None}
+
     def reconcile_selection(self):
         self.warp.recover()
         if self.warp.is_active:
@@ -490,16 +501,25 @@ class Manager:
         nodes = self.runtime_nodes()
         if not nodes:
             raise Invalid('Список узлов Xray пока недоступен.')
-        target = next((n['tag'] for n in nodes if self.node_id(n) == self.selection.get('id')), '')
+        pinned = self.selection.get('id')
+        suspended = bool(pinned and self.selection.get('suspended'))
+        target = next((n['tag'] for n in nodes if self.node_id(n) == pinned), '')
+        if pinned and not suspended and not target:
+            # Keep the preference instead of silently dropping it: the node may
+            # be temporarily missing while Xray reloads or the source recovers.
+            updated = copy.deepcopy(self.selection)
+            updated['suspended'] = True
+            updated['suspended_at'] = int(time.time())
+            self.save_selection(updated)
+            suspended = True
+            self.update(message='Приоритетный узел временно отсутствует в Xray. Используется автовыбор; вернёмся на него, когда он появится.')
+        desired = '' if suspended else target
         status = self.panel.balancer()
-        if status.get('override', '') != target:
-            self.panel.override(target)
+        if status.get('override', '') != desired:
+            self.panel.override(desired)
             status = self.panel.balancer()
-        if status.get('override', '') != target:
+        if status.get('override', '') != desired:
             raise Invalid('Xray не подтвердил переключение. Повторите попытку.')
-        if self.selection.get('id') and not target:
-            self.save_selection({'id': None})
-            self.update(message='Выбранный узел исчез из подписки. Включён автоматический выбор.')
         # Xray's `selected` remains the strategy result even while an override is active.
         effective = [status['override']] if status.get('override') else status.get('selected', [])
         self.update(connection={'selected': effective, 'override': status.get('override', ''), 'checked': int(time.time())}, connection_error=None)
@@ -1021,14 +1041,53 @@ class Manager:
         self.source_status[source].update(checked=int(time.time()), working=working)
         return working > 0
 
-    def release_failed_pin(self, source):
-        record = self.sources[source]
-        if node_signature(record['nodes']) != node_signature(self.active['nodes']):
-            self.apply(record, self.panel.preflight(), source=source, remember_previous=False,
-                       selection={'id': None}, update_source=False)
-        else:
-            self.save_selection({'id': None})
-            self.reconcile_selection()
+    def suspend_pin(self, source):
+        selection = self.selection
+        active_source = self.active.get('source', 'primary')
+        if (not selection.get('id') or selection.get('suspended')
+                or selection.get('source', active_source) != source):
+            return
+        updated = copy.deepcopy(selection)
+        updated['suspended'] = True
+        updated['suspended_at'] = int(time.time())
+        # Persist the preference before touching Xray: a failed switch must not
+        # silently lose the user's priority node.
+        self.save_selection(updated)
+        record = self.sources.get(source) or {}
+        try:
+            if record and node_signature(record.get('nodes', [])) != node_signature(self.active.get('nodes', [])):
+                self.apply(record, self.panel.preflight(), source=source, remember_previous=False,
+                           selection=updated, update_source=False)
+            else:
+                self.reconcile_selection()
+        finally:
+            self.update(message='Приоритетный узел временно недоступен. Используется автовыбор; '
+                                'вернёмся на него автоматически, когда он восстановится.')
+
+    def restore_suspended_pin(self):
+        selection = self.selection
+        pinned = selection.get('id')
+        if not pinned or not selection.get('suspended'):
+            return False
+        source = selection.get('source') or self.active.get('source', 'primary')
+        if source != self.active.get('source', 'primary'):
+            return False
+        record = self.sources.get(source) or {}
+        runtime_nodes = self.runtime_nodes()
+        if not any(self.node_id(n) == pinned for n in runtime_nodes):
+            return False
+        node = next((n for n in record.get('nodes', []) if self.node_id(n) == pinned), None)
+        if node is None:
+            node = next((n for n in runtime_nodes if self.node_id(n) == pinned), None)
+        if node is None or self.probe.latency(node) is None:
+            return False
+        updated = copy.deepcopy(selection)
+        updated.pop('suspended', None)
+        updated.pop('suspended_at', None)
+        self.save_selection(updated)
+        self.reconcile_selection()
+        self.update(message='Приоритетный узел снова работает — возвращаемся на него.')
+        return True
 
     def health_tick(self):
         """Called under the operation lock. Only completed probes count as evidence."""
@@ -1046,6 +1105,8 @@ class Manager:
             return
         try:
             self.panel.preflight()
+            if self.restore_suspended_pin():
+                return
             if source == 'primary':
                 runtime = json.loads(pathlib.Path(self.config['runtime']).read_text())
                 if node_signature(self.runtime_nodes()) != node_signature(self.active['nodes']):
@@ -1054,15 +1115,14 @@ class Manager:
                 if alive:
                     self.health_result = None
                     return
-                if self.selection.get('id'):
+                if self.selection.get('id') and not self.selection.get('suspended'):
                     pinned = next((n for n in self.active['nodes'] if self.node_id(n) == self.selection['id']), None)
                     if pinned and self.probe.latency(pinned) is not None:
                         self.health_result = None
                         return
                 if self.check_source_health('primary'):
-                    if self.selection.get('id'):
-                        self.release_failed_pin('primary')
-                        self.update(message='Выбранный основной узел недоступен; включён автоматический выбор основных серверов.')
+                    if self.selection.get('id') and not self.selection.get('suspended'):
+                        self.suspend_pin('primary')
                     self.health_result = None
                     return
                 if not self.sources['enabled']:
@@ -1072,15 +1132,15 @@ class Manager:
                 if not self.check_source_health('primary'):
                     self.health_result = None
                     if self.check_source_health(source):
-                        if self.selection.get('id'):
+                        if self.selection.get('id') and not self.selection.get('suspended'):
                             pinned = next((n for n in self.active['nodes'] if self.node_id(n) == self.selection['id']), None)
                             if not pinned or self.probe.latency(pinned) is None:
-                                self.release_failed_pin(source)
+                                self.suspend_pin(source)
                     else:
                         target = self.reserve_target()
                         if target and target != source:
                             self.apply(self.sources[target], self.panel.preflight(), source=target, remember_previous=False,
-                                       selection={'id': None}, update_source=False)
+                                       selection=self.automatic_selection(), update_source=False)
                             self.update(message='Действующий резерв недоступен; включён другой бесплатный источник.')
                         elif not target:
                             self.update(message='Рабочих резервных узлов нет. Текущая конфигурация сохранена.')
@@ -1103,7 +1163,7 @@ class Manager:
                     self.health_result = None
                     return
             self.apply(self.sources[target], self.panel.preflight(), source=target, remember_previous=False,
-                       selection={'id': None}, update_source=False)
+                       selection=self.automatic_selection(), update_source=False)
             self.update(message='Восстановлена основная подписка.' if target == 'primary' else 'Включён бесплатный резерв.')
         except Exception:
             self.health_result = None
@@ -1121,6 +1181,8 @@ class Manager:
             runtime = json.loads(pathlib.Path(self.config['runtime']).read_text())
             if node_signature(self.runtime_nodes()) != node_signature(self.active['nodes']):
                 raise Invalid('Рабочая конфигурация Xray изменилась.')
+            if self.restore_suspended_pin():
+                return
             order = self.priority_ids()
             if any(not self.sources.get(key) and not self.catalog()[key].get('last_error') for key in self.personal_ids()):
                 self.update(message='Ожидаем первоначальной проверки резервной подписки.')
@@ -1133,13 +1195,14 @@ class Manager:
                 # With emergency WARP enabled, prove the subscription itself:
                 # a successful routed URL may use an earlier direct/pilot rule.
                 alive = source in order and not self.warp.fallback_enabled and self.probe.routed(runtime)
-                if source in order and not alive and self.selection.get('id'):
+                if (source in order and not alive and self.selection.get('id')
+                        and not self.selection.get('suspended')):
                     pinned = next((n for n in self.active['nodes'] if self.node_id(n) == self.selection['id']), None)
                     alive = bool(pinned and self.probe.latency(pinned) is not None)
                 if source in order and not alive:
                     alive = self.check_source_health(source)
-                    if alive and self.selection.get('id'):
-                        self.release_failed_pin(source)
+                    if alive and self.selection.get('id') and not self.selection.get('suspended'):
+                        self.suspend_pin(source)
                 if alive:
                     self.health_result = None
                     return
@@ -1175,7 +1238,7 @@ class Manager:
                     self.health_result = None
                     return
             self.apply(self.sources[target], self.panel.preflight(), source=target, remember_previous=False,
-                       selection={'id': None}, update_source=False)
+                       selection=self.automatic_selection(), update_source=False)
             label = 'основная подписка' if target == 'primary' else self.catalog()[target]['name']
             self.update(message='Автоматически включена подписка: ' + label + '.')
         except Exception:

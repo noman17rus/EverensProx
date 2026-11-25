@@ -177,18 +177,62 @@ class PersonalTest(unittest.TestCase):
         self.assertEqual(self.manager.state()['connection']['selected'], ['pixel-node-1'])
         self.assertEqual(self.panel.refreshes, 0)
 
-    def test_failed_star_uses_other_nodes_before_reserve(self):
+    def test_failed_star_uses_other_nodes_and_keeps_preference(self):
         self.add_personal()
-        self.manager.select_node(self.manager.node_id(self.primary['nodes'][0]), 'primary')
+        node_id = self.manager.node_id(self.primary['nodes'][0])
+        self.manager.select_node(node_id, 'primary')
         other = copy.deepcopy(self.primary['nodes'][0])
         other['settings']['vnext'][0]['address'] = 'healthy.example.com'
         self.manager.sources['primary']['nodes'].append(other)
         self.dead.add('example.com')
         with patch.object(self.probe, 'latency', return_value=None):
             self.tick(1000)
-        self.assertIsNone(self.manager.selection['id'])
+        self.assertEqual(self.manager.selection['id'], node_id)
+        self.assertTrue(self.manager.state()['pin_suspended'])
+        self.assertEqual(self.panel.target, '')
         self.assertEqual(self.manager.active.get('source', 'primary'), 'primary')
         self.assertEqual(len(self.manager.active['nodes']), 2)
+
+    def test_priority_node_is_restored_after_recovery(self):
+        self.add_personal()
+        node_id = self.manager.node_id(self.primary['nodes'][0])
+        self.manager.select_node(node_id, 'primary')
+        other = copy.deepcopy(self.primary['nodes'][0])
+        other['settings']['vnext'][0]['address'] = 'healthy.example.com'
+        self.manager.sources['primary']['nodes'].append(other)
+        self.dead.add('example.com')
+        with patch.object(self.probe, 'latency', side_effect=[None, 100]):
+            self.tick(1000)
+            self.assertTrue(self.manager.state()['pin_suspended'])
+            self.assertEqual(self.panel.target, '')
+            self.tick(1060)
+        self.assertFalse(self.manager.state()['pin_suspended'])
+        self.assertEqual(self.manager.state()['mode'], 'manual')
+        restored = next(n['tag'] for n in self.manager.runtime_nodes()
+                        if self.manager.node_id(n) == node_id)
+        self.assertEqual(self.panel.target, restored)
+
+
+    def test_primary_pin_survives_full_outage_and_returns(self):
+        node_id = self.manager.node_id(self.primary['nodes'][0])
+        self.manager.select_node(node_id, 'primary')
+        self.dead.add('example.com')
+        with patch.object(self.probe, 'latency', side_effect=[None, None, 100]):
+            self.tick(1000)
+            self.tick(1060)
+            self.assertEqual(self.manager.active.get('source'), 'free')
+            self.assertEqual(self.manager.selection['id'], node_id)
+            self.assertTrue(self.manager.state()['pin_suspended'])
+            self.dead.clear()
+            self.tick(1120)
+            self.tick(1180)
+            self.assertEqual(self.manager.active.get('source', 'primary'), 'primary')
+            self.tick(1240)
+        self.assertFalse(self.manager.state()['pin_suspended'])
+        self.assertEqual(self.manager.state()['mode'], 'manual')
+        restored = next(n['tag'] for n in self.manager.runtime_nodes()
+                        if self.manager.node_id(n) == node_id)
+        self.assertEqual(self.panel.target, restored)
 
 
 if __name__ == '__main__':
