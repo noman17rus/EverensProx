@@ -283,10 +283,12 @@ class ProvisioningTest(unittest.TestCase):
         self.addCleanup(server.server_close)
         self.addCleanup(server.shutdown)
 
-        def request(method, path, value=None):
+        def request(method, path, value=None, headers=None):
             connection = http.client.HTTPConnection(*server.server_address, timeout=5)
+            request_headers = {'Content-Type': 'application/json'}
+            request_headers.update(headers or {})
             connection.request(method, path, json.dumps(value) if value is not None else None,
-                               {'Content-Type': 'application/json'})
+                               request_headers)
             response = connection.getresponse()
             status, body = response.status, json.loads(response.read())
             connection.close()
@@ -303,6 +305,52 @@ class ProvisioningTest(unittest.TestCase):
         status, error = request('POST', '/api/v1/provision', {'login': 'web'})
         self.assertEqual(status, 503)
         self.assertNotIn('password', json.dumps(error))
+
+    def test_http_warp_feature_header(self):
+        self.config['warp'] = {'enabled': True, 'email': 'warp@everensprox',
+                               'uuid': 'warp-uuid', 'inbound_id': 1, 'name': 'WARP'}
+        manager = Manager(self.config, self.panel, self.wdtt)
+        account = manager.provision('header-user')
+        path = '/api/v1/subscriptions/' + account['subscription_url'].rsplit('/', 1)[1]
+        server = Server(('127.0.0.1', 0), manager)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+
+        def fetch(headers):
+            connection = http.client.HTTPConnection(*server.server_address, timeout=5)
+            connection.request('GET', path, headers=headers)
+            response = connection.getresponse()
+            body = json.loads(response.read())
+            connection.close()
+            return [proxy['name'] for proxy in body['proxies']]
+
+        self.assertNotIn('WARP', fetch({}))
+        self.assertIn('WARP', fetch({'X-EverensProx-Features': 'warp'}))
+
+    def test_warp_client_is_added_only_for_feature_requests(self):
+        self.config['warp'] = {'enabled': True, 'email': 'warp@everensprox',
+                               'uuid': 'warp-uuid', 'inbound_id': 1, 'name': 'WARP'}
+        manager = Manager(self.config, self.panel, self.wdtt)
+        account = manager.provision('warp-user')
+        token = account['subscription_url'].rsplit('/', 1)[1]
+        without = manager.subscription(token)
+        self.assertNotIn('WARP', [proxy['name'] for proxy in without['proxies']])
+        with_feature = manager.subscription(token, features={'warp'})
+        names = [proxy['name'] for proxy in with_feature['proxies']]
+        self.assertIn('WARP', names)
+        self.assertEqual(with_feature['proxy-groups'][0]['proxies'],
+                         [name for name in names if name != 'WARP'])
+        warp_client = next(client for _, client in self.panel.additions
+                           if client['email'] == 'warp@everensprox')
+        self.assertEqual(warp_client['id'], 'warp-uuid')
+        self.assertEqual(warp_client['limitIp'], 0)
+        self.assertEqual(manager.subscription(token, features={'warp'}), with_feature)
+        self.assertEqual(len([client for _, client in self.panel.additions
+                              if client['email'] == 'warp@everensprox']), 1)
+        with self.assertRaises(Invalid):
+            manager.provision('WARP@EVERENSPROX')
 
     def test_rate_limit_is_not_a_device_limit(self):
         limiter = RateLimiter(limit=2)

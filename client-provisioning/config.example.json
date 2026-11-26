@@ -10,6 +10,13 @@
   "inbound_hosts": {},
   "inbound_ports": {},
   "reality_mlkem_inbound_ids": [],
+  "warp": {
+    "enabled": false,
+    "email": "warp@everensprox",
+    "uuid": "REPLACE_WITH_WARP_UUID",
+    "inbound_id": 2,
+    "name": "WARP"
+  },
   "wdtt_socket": "/run/wdtt/admin.sock",
   "wdtt_password_file": "/etc/everensprox-provisioning/wdtt-password",
   "wdtt_host": "hub.everens.online",

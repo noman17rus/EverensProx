@@ -117,7 +117,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if not post and path.startswith(prefix):
                 tail = path[len(prefix):].split('/')
                 if len(tail) == 1 or len(tail) == 2 and tail[1] == 'metadata':
-                    self.reply(200, self.server.manager.subscription(tail[0], metadata=len(tail) == 2))
+                    features = {part.strip().lower() for part in
+                                self.headers.get('X-EverensProx-Features', '').split(',')
+                                if part.strip()}
+                    self.reply(200, self.server.manager.subscription(
+                        tail[0], metadata=len(tail) == 2, features=features))
                     return
             self.reply(404, {'code': 'not_found'})
         except (Invalid, ValueError, UnicodeError):
