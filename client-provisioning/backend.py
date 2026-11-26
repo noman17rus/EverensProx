@@ -120,13 +120,13 @@ class Wdtt:
                           '--vk-hash', self.config['wdtt_hashes']])['password']
 
 
-def client_node(inbound, client, host, port=None, reality_mlkem=False):
+def client_node(inbound, client, host, port=None, reality_mlkem=False, name=None):
     stream = object_value(inbound.get('streamSettings') or {})
     network = stream.get('network', 'tcp')
     security = stream.get('security', 'none')
     if network not in ('tcp', 'raw', 'ws', 'grpc', 'xhttp') or security not in ('none', 'tls', 'reality'):
         raise Unavailable('Неподдерживаемый транспорт VLESS: проверьте выбранные инбаунды.')
-    node = {'name': 'VLESS ' + str(inbound['id']), 'type': 'vless', 'server': host,
+    node = {'name': name or ('VLESS ' + str(inbound['id'])), 'type': 'vless', 'server': host,
             'port': port if port is not None else inbound['port'], 'uuid': client['id'], 'udp': True,
             'network': 'tcp' if network == 'raw' else network}
     if client.get('flow'):
@@ -191,6 +191,7 @@ class Manager:
         self.wdtt = wdtt or Wdtt(config)
         self.lock = threading.Lock()
         self.path = config['database']
+        self.warp = config.get('warp') or {}
         pathlib.Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as db:
             db.execute('''CREATE TABLE IF NOT EXISTS accounts (
@@ -228,8 +229,43 @@ class Manager:
             raise Unavailable('Нет доступных клиентских VLESS-инбаундов.')
         return selected
 
+    def warp_settings(self):
+        if not self.warp.get('enabled'):
+            return None
+        email = str(self.warp.get('email', '')).strip().lower()
+        uuid_value = str(self.warp.get('uuid', '')).strip()
+        if not email or not uuid_value:
+            raise Unavailable('WARP-клиент настроен не полностью.')
+        return {'email': email, 'uuid': uuid_value,
+                'name': str(self.warp.get('name') or 'WARP')}
+
+    def ensure_warp_client(self, inbounds, settings):
+        inbound_id = self.warp.get('inbound_id')
+        inbound = next((item for item in inbounds if inbound_id is not None and item['id'] == inbound_id), None)
+        if inbound is None:
+            if inbound_id is not None:
+                raise Unavailable('Выбранный инбаунд WARP недоступен.')
+            inbound = inbounds[0]
+        clients = object_value(inbound.get('settings') or {}).get('clients', [])
+        existing = next((client for client in clients
+                         if str(client.get('email', '')).strip().lower() == settings['email']), None)
+        if existing is not None:
+            if existing.get('id') != settings['uuid']:
+                raise Unavailable('WARP-клиент уже существует с другим UUID; требуется проверка владельцем сервера.')
+            return inbound, existing
+        stream = object_value(inbound.get('streamSettings') or {})
+        client = {'id': settings['uuid'], 'email': settings['email'], 'subId': 'warp-sub',
+                  'enable': True, 'limitIp': 0, 'totalGB': 0, 'expiryTime': 0,
+                  'tgId': '', 'reset': 0,
+                  'flow': 'xtls-rprx-vision' if stream.get('security') == 'reality' and
+                  stream.get('network', 'tcp') in ('tcp', 'raw') else ''}
+        self.panel.add(inbound, client)
+        return inbound, client
+
     def provision(self, value):
         login, display = normalize_login(value)
+        if self.warp.get('enabled') and login == str(self.warp.get('email', '')).strip().lower():
+            raise Invalid('Этот логин зарезервирован для WARP.')
         with self.lock, self.connect() as db:
             row = db.execute('SELECT * FROM accounts WHERE login=?', (login,)).fetchone()
             if row is None:
@@ -258,7 +294,7 @@ class Manager:
             self.reconcile(db, row)
             return self.result(db.execute('SELECT * FROM accounts WHERE id=?', (row['id'],)).fetchone())
 
-    def reconcile(self, db, row):
+    def reconcile(self, db, row, features=()):
         inbounds = self.eligible(self.panel.inbounds())
         template = None
         for inbound in inbounds:
@@ -312,8 +348,18 @@ class Manager:
             'hashes': hashes, 'name': row['display']})
         db.execute('UPDATE accounts SET wdtt_link=? WHERE id=?', (link, row['id']))
         db.commit()
-        return {'proxies': nodes, 'proxy-groups': [
-            {'name': 'VLESS', 'type': 'fallback', 'proxies': [n['name'] for n in nodes],
+        warp_node = None
+        warp = self.warp_settings() if 'warp' in features else None
+        if warp is not None:
+            inbound, client = self.ensure_warp_client(inbounds, warp)
+            host = self.config.get('inbound_hosts', {}).get(str(inbound['id']), self.config['public_host'])
+            port = self.config.get('inbound_ports', {}).get(str(inbound['id']))
+            warp_node = client_node(inbound, client, host, port,
+                                    reality_mlkem=inbound['id'] in self.config.get('reality_mlkem_inbound_ids', []),
+                                    name=warp['name'])
+        names = [n['name'] for n in nodes]
+        return {'proxies': nodes + ([warp_node] if warp_node else []), 'proxy-groups': [
+            {'name': 'VLESS', 'type': 'fallback', 'proxies': names,
              'url': 'https://www.gstatic.com/generate_204', 'interval': 300}], 'rules': ['MATCH,VLESS']}
 
     def result(self, row):
@@ -321,12 +367,12 @@ class Manager:
                 'subscription_url': self.config['public_url'].rstrip('/') + '/api/v1/subscriptions/' + row['token'],
                 'wdtt_link': row['wdtt_link']}
 
-    def subscription(self, token, metadata=False):
+    def subscription(self, token, metadata=False, features=()):
         with self.lock, self.connect() as db:
             row = db.execute('SELECT * FROM accounts WHERE token=?', (token,)).fetchone()
             if row is None:
                 raise NotFound('Unknown subscription')
-            config = self.reconcile(db, row)
+            config = self.reconcile(db, row, features=features)
             if metadata:
                 return self.result(db.execute('SELECT * FROM accounts WHERE id=?', (row['id'],)).fetchone())
             return config

@@ -20,6 +20,20 @@ from backend import Panel, Probe, atomic, digest, runtime_guard
 from formats import Invalid
 from warp import TAG, PROBE_TAG, PROBE_PORT, Warp
 
+WARP_USER = 'warp@everensprox'
+
+
+def add_warp_rule(template, email=WARP_USER):
+    """Route one VLESS identity to WARP without touching other clients."""
+    rules = template.setdefault('routing', {}).setdefault('rules', [])
+    if any(email in (rule.get('user') or []) and rule.get('outboundTag') == TAG for rule in rules):
+        return
+    index = 0
+    api_tag = template.get('api', {}).get('tag', 'api')
+    while index < len(rules) and rules[index].get('outboundTag') == api_tag and rules[index].get('inboundTag'):
+        index += 1
+    rules.insert(index, {'type': 'field', 'user': [email], 'outboundTag': TAG})
+
 
 def download(url):
     request = urllib.request.Request(url, headers={'User-Agent': 'EverensProx-WARP'})
@@ -111,6 +125,7 @@ def provision(config, node, backup):
             index += 1
         # 3x-ui always keeps its own API rule first; preserve that invariant.
         rules.insert(index, {'type': 'field', 'inboundTag': [PROBE_TAG], 'outboundTag': TAG})
+    add_warp_rule(template)
     if digest(panel.preflight()) != digest(before):
         raise Invalid('Конфигурация изменилась во время проверки WARP.')
 
@@ -132,10 +147,14 @@ def provision(config, node, backup):
             raise Invalid('3x-ui не подтвердила сохранение WARP.')
         guarded = copy.deepcopy(live)
         guarded['inbounds'] = [i for i in guarded.get('inbounds', []) if i.get('tag') != PROBE_TAG]
-        guarded['routing']['rules'] = [r for r in guarded['routing']['rules'] if r != {'type': 'field', 'inboundTag': [PROBE_TAG], 'outboundTag': TAG}]
+        guarded['routing']['rules'] = [r for r in guarded['routing']['rules'] if r not in (
+            {'type': 'field', 'inboundTag': [PROBE_TAG], 'outboundTag': TAG},
+            {'type': 'field', 'user': [WARP_USER], 'outboundTag': TAG})]
         old_guarded = copy.deepcopy(runtime)
         old_guarded['inbounds'] = [i for i in old_guarded.get('inbounds', []) if i.get('tag') != PROBE_TAG]
-        old_guarded['routing']['rules'] = [r for r in old_guarded['routing']['rules'] if r != {'type': 'field', 'inboundTag': [PROBE_TAG], 'outboundTag': TAG}]
+        old_guarded['routing']['rules'] = [r for r in old_guarded['routing']['rules'] if r not in (
+            {'type': 'field', 'inboundTag': [PROBE_TAG], 'outboundTag': TAG},
+            {'type': 'field', 'user': [WARP_USER], 'outboundTag': TAG})]
         if runtime_guard(guarded) != runtime_guard(old_guarded):
             raise Invalid('При настройке WARP изменились входы или маршрутизация.')
     except Exception:
